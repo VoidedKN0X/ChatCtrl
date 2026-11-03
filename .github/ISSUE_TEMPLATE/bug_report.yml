@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in ChatCtrl doesn't work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Before you post, please remove server addresses, Matrix IDs, room names, passwords, recovery keys, access tokens and other personal info from your text and screenshots. Security problems go [here instead](https://github.com/VoidedKN0X/ChatCtrl/security/advisories/new), not in a public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: input
+    id: app-version
+    attributes:
+      label: ChatCtrl version
+      placeholder: "Profile picture > bottom of the You page, e.g. 2.0.0"
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version and phone
+      placeholder: "Android 15, Pixel 8"
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: Matrix homeserver and version
+      placeholder: "matrix.org, or Synapse 1.120 / Conduwuit / Tuwunel"
+  - type: dropdown
+    id: source
+    attributes:
+      label: Installed from
+      options:
+        - GitHub Releases
+        - Obtainium
+        - CtrlF-Droid
+        - Built it myself
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshots or logs
+      description: Settings > Troubleshooting > Connection log can help with connection problems. Check it for anything private first.

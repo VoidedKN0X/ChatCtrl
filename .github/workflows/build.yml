@@ -1,0 +1,197 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+    # Only changes to the app itself make a new release. README, licence, badges
+    # and CI edits don't, so Obtainium and the F-Droid repo only see real updates.
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - "element-call/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # A release is published only when versionName (and versionCode) in
+  # app/build.gradle.kts are bumped. Other pushes just build to check the code.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0   # tags, to see whether this version is already released
+
+      - name: Check for a version bump
+        id: v
+        run: bash .github/scripts/check-version.sh
+
+  build:
+    needs: version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.name.outputs.tag }}
+      version: ${{ steps.name.outputs.version }}
+      apk: ${{ steps.name.outputs.apk }}
+      signed: ${{ steps.name.outputs.signed }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      # The call screen: Element Call, built from source at the commit pinned in element-call/upstream.env, with
+      # ChatCtrl's patches (no Google reCAPTCHA or MediaPipe, no analytics, crash reporting or bug-report upload).
+      # If this fails, the APK isn't built and nothing is released.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.11.1
+
+      - name: Cache Element Call's dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ~/.cache/node/corepack
+          key: element-call-pnpm-${{ hashFiles('element-call/upstream.env') }}
+          restore-keys: element-call-pnpm-
+
+      - name: Build Element Call from source
+        env:
+          EC_PNPM_STORE: ${{ runner.temp }}/pnpm-store
+        run: |
+          # Corepack 0.34.5+ is needed for pnpm 11 and 12 (Element Call's and matrix-js-sdk's); Node 24.11's is older.
+          npm install -g corepack@0.36.0
+          corepack enable
+          set -o pipefail
+          if ! bash element-call/build.sh 2>&1 | tee element-call-build.log; then
+            # Surface the end of the log as annotations so the error is visible without opening the logs.
+            tail -n 150 element-call-build.log | sed 's/\x1b\[[0-9;]*m//g' | split -l 50 - "$RUNNER_TEMP/ec-log-"
+            for f in "$RUNNER_TEMP"/ec-log-*; do
+              msg=$(sed 's/%/%25/g' "$f" | awk '{printf "%s%%0A", $0}')
+              echo "::error title=Element Call build failed ($(basename "$f"))::$msg"
+            done
+            exit 1
+          fi
+
+      - name: Decode signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            umask 077
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "SIGNING_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "RELEASE_SIGNED=1" >> "$GITHUB_ENV"
+          else
+            echo "::error title=Unsigned build::No signing secrets set - release builds must be signed with the release key"
+            exit 1
+          fi
+
+      - name: Build release APK
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ vars.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          if ! ./gradlew --no-daemon assembleRelease 2>&1 | tee build.log; then
+            # Surface compiler errors as an annotation so they're visible without opening the logs.
+            msg=$(grep -E "^e: |What went wrong|error:|FAILED" build.log | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Build failed::$msg"
+            exit 1
+          fi
+
+      - name: Name APK and check signature
+        id: name
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          TAG="v${VERSION}"
+          APK="ChatCtrl-${TAG}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$APK"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "APK=$APK" >> "$GITHUB_ENV"
+
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          CERT=$("$APKSIGNER" verify --print-certs "$APK" | grep -m1 "certificate DN" | sed 's/^[^:]*: //')
+          SHA=$("$APKSIGNER" verify --print-certs "$APK" | grep -m1 "SHA-256" | sed 's/^.*: //')
+          echo "Signed by: $CERT"
+          if [ "$RELEASE_SIGNED" = "1" ] && echo "$CERT" | grep -q "Android Debug"; then
+            echo "::error title=Signing failed::Secrets are set but the APK is debug-signed - check the key alias and passwords"
+            exit 1
+          fi
+          if [ "$RELEASE_SIGNED" != "1" ] || echo "$CERT" | grep -q "Android Debug"; then
+            echo "::error title=Signing failed::APK is not release-signed"
+            exit 1
+          fi
+          {
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+            echo "apk=$APK"
+            echo "signed=1"
+          } >> "$GITHUB_OUTPUT"
+          echo "::notice title=Signed APK::$APK signed by $CERT (SHA-256 $SHA)"
+
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ChatCtrl-apk
+          path: |
+            ${{ env.APK }}
+            app/build/outputs/mapping/release/mapping.txt
+
+  release:
+    needs: [version, build]
+    if: needs.version.outputs.release == 'true' && needs.build.outputs.signed == '1'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create releases
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0   # full history and tags, for the release notes
+
+      - name: Write release notes
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          bash .github/scripts/release-notes.sh "$TAG" "$GITHUB_SHA" > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ChatCtrl-apk
+          path: dist
+
+      - name: Publish release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: ChatCtrl ${{ needs.build.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: dist/${{ needs.build.outputs.apk }}
+          body_path: ${{ runner.temp }}/notes.md

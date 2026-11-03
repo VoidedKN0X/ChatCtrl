@@ -1,0 +1,40 @@
+package com.vknxworks.chatctrl.ui.room
+
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.launch
+import com.vknxworks.chatctrl.matrix.MatrixSession
+import com.vknxworks.chatctrl.matrix.RoomController
+import com.vknxworks.chatctrl.matrix.TimelineController
+import com.vknxworks.chatctrl.ui.Notifications
+
+/**
+ * Keeps an open room's SDK objects alive for as long as its screen is on the back stack, so going to the
+ * details screen and back doesn't reload the timeline.
+ */
+class RoomViewModel(
+    val session: MatrixSession,
+    val roomId: String,
+    val threadRootId: String? = null,
+    withTimeline: Boolean = true,
+    val focusEventId: String? = null,
+) : ViewModel() {
+    private val sdkRoom = session.getRoom(roomId)
+    val room: RoomController? = sdkRoom?.let { RoomController(session, it) }
+    val timeline: TimelineController? = if (withTimeline) sdkRoom?.let { TimelineController(session, it, threadRootId, focusEventId) } else null
+
+    init {
+        room?.start()
+        timeline?.start()
+        if (withTimeline) Notifications.clear(roomId)
+    }
+
+    override fun onCleared() {
+        timeline?.close()
+        room?.close()
+        // A draft may still be saving as the screen closes; release the room a moment later.
+        session.scope.launch {
+            kotlinx.coroutines.delay(2000)
+            runCatching { sdkRoom?.close() }
+        }
+    }
+}

@@ -1,0 +1,614 @@
+# Changelog
+
+To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
+
+## 2.0.0
+
+ChatCtrl's first release under its own name, with a new app ID and a new signing key.
+
+### Changed
+
+- **New name, new app ID and new signing key.** This is a separate app on your phone: it doesn't update an earlier install, and it starts without any accounts. Install it, sign in again, and verify this new session with your recovery key or from another of your devices so you can read your older encrypted messages. Before you remove the earlier install, check that key backup is turned on and that you have your recovery key. Settings, drafts and the app lock don't carry over.
+- **Notifications through ntfy are registered again** the first time you open ChatCtrl, under the new app ID.
+- This phone shows up as **ChatCtrl on** *your phone's name* in the session list of your other devices, and files you save go to *Downloads/ChatCtrl*.
+
+## 1.9.4
+
+A security update: notification replies respect the app lock, safer file names when saving, and a tighter call screen.
+
+### Security
+
+- **No inline reply on notifications while the app lock is on.** If you chose to show message content in notifications with the app lock on, the notification still had a **Reply** button, so someone holding your unlocked phone could send a message as you without the app PIN. With the app lock on, message notifications now only have **Mark as read**; tap the notification to open the chat behind the lock screen. Nothing changes without the app lock.
+- **Saving a file to Downloads cleans up its name first.** The file name comes from the person who sent it; slashes, colons and other characters that aren't allowed in file names are replaced, so a file always lands in *Downloads/ChatCtrl* under a plain name.
+- **The call screen only listens to itself.** The bridge between the call screen and the app now ignores messages that don't come from the bundled Element Call page. Other pages could already not be loaded in the call screen; this is an extra guard.
+
+### Project
+
+- New **SECURITY.md**: how to report a security problem privately, and the release signing fingerprint.
+- New issue forms for bug reports and feature requests, with a reminder to leave out server addresses, passwords and personal details.
+- README: clearer install steps for first-time GitHub users, a new **Is it safe to install?** section (how releases are built and signed, and what every permission is for), **How ChatCtrl is made**, the full Ctrl series list, and a note that ChatCtrl isn't affiliated with Element or the Matrix.org Foundation.
+
+## 1.9.3
+
+### Fixed
+
+- **Bottom sheets no longer show a stray grey box or outline.** The sheets that slide up from the bottom had a thin border that was drawn in the wrong place: a grey rectangle cut across the open sheet (often right through the first row) and a stray rounded outline could show near the top of the screen. The border is gone, so sheets are now a plain card-coloured surface with rounded top corners; the dimmed background already sets them apart. This fixes:
+  - the message long-press menu (reactions, reply, edit, copy, delete…),
+  - the emoji picker for reactions,
+  - the read receipts list,
+  - the chat list's long-press menu (mark as read, favourite, low priority, leave),
+  - the bubble style picker and the other choice lists in Settings (notification modes, lock timeout, double-tap reaction…),
+  - the session details sheet in Devices.
+- Dialogs keep their thin border (theirs was drawn correctly), and popup menus keep the look from 1.9.2. Nothing else changes.
+
+## 1.9.2
+
+### Fixed
+
+- **Popup menus no longer show a grey box.** The attachment menu in a chat (the **+** button next to the message box: Photo or video, File, Poll, Location) used Android's default menu shadow, which was drawn as a grey, square-ish edge around the menu, most visible in light mode. It's now a flat Ctrl surface: the card colour (white in light mode, near-black in dark mode), 16 dp rounded corners, a thin border and no shadow.
+- The menu's text uses the normal text colour and its icons the grey secondary colour, in both light and dark mode.
+- Checked the other popups for the same grey edge: the message long-press menu, the reaction and emoji pickers and the read receipts list are bottom sheets that already have no shadow, and dialogs are flat with a thin border, so they're unchanged. Nothing else in the app works differently.
+
+## 1.9.1
+
+### Fixed
+
+- **No more crash when closing the app with the app lock set to lock straight away.** Pressing Back on the chat list or swiping ChatCtrl away from Recents could crash it, because the lock screen (and its fingerprint prompt) tried to open on a screen that was already closing. The app still locks, and opens on the lock screen next time.
+- **The fingerprint prompt no longer crashes the app** when Android refuses to show it, for example while you're leaving the app. You can unlock with your PIN instead.
+- **Closing the QR scanner right after opening it** no longer leaves the camera switched on in the background (the camera indicator could stay on until you left the screen).
+- **Calls:** audio switches that were still pending when a call ended (Bluetooth earphones reconnecting, a device picked at the last moment) no longer run after the call, so the phone's audio is left in its normal mode and the earpiece screen-off sensor isn't turned on again. The call screen also no longer crashes when it's closed while it's asking for the camera or microphone.
+- **Fewer crashes in the background:** an unexpected error in background work (syncing, the chat list, a chat, search, voice messages, calls) while the app is closing or a chat goes away is now ignored instead of closing the whole app.
+- **Signing in with a QR code** stops when you leave the screen or the app is closed, instead of carrying on in the background.
+
+### Security
+
+- **QR sign-in only accepts servers with an encrypted (https) connection.** A QR code pointing at a plain http server is refused with a message, as the server list asks you to confirm such servers first and a QR code skips that step.
+- **Link new device** only opens the account page from your server when it's an https address.
+- **Call screen hardening:** messages to the call page are always passed as data and can never run as code there, the page can't load any unencrypted (http) content, only the bundled call page over https can ask for the camera and microphone, and the call page's web cache is cleared when a call ends.
+- **The audio output picker can't open on top of the lock screen** during a call while the app is locked.
+
+### Changed
+
+- **Signing out also deletes the cached map tiles** from location maps, which show which places you looked at.
+- Internal cleanup: removed unused text.
+
+## 1.9.0
+
+### New
+
+- **Sign in with a QR code.** The first screen has a new **Sign in with QR code** option at the top. On a phone or computer where you're already signed in (Element X, Element Web or ChatCtrl), choose **Link new device** and show its QR code, then scan it with ChatCtrl. The server comes from the code, so you don't pick one first.
+  - ChatCtrl shows a two-digit code to type on the other device, so both sides know they're talking to each other and nobody else; then the other device approves the sign-in (and may show a code to compare).
+  - Your encryption keys come over from the other device, so ChatCtrl is verified straight away and can read your encrypted messages without comparing emojis or entering the recovery key.
+  - It needs a server that signs in through Matrix Authentication Service (OAuth) with QR sign-in (MSC4108) turned on. Other servers, or a code that isn't a sign-in code (or is from a device that itself wants to sign in), get a clear message saying so, and you can sign in the usual way below.
+- **Link new device.** *You › Devices* has a new **Link new device** row, to sign a new phone or computer in to your account from ChatCtrl:
+  - **Show QR code**: the new device scans the code on your screen, then you type the two-digit code it shows.
+  - **Scan the new device's QR code**: for a new device that shows a code ("Sign in with QR code" there); ChatCtrl shows a two-digit code to type on it.
+  - Then ChatCtrl opens your account page to approve the new device (check that its code matches), and after **I've approved it** it sends your encryption keys over, so the new device is verified straight away.
+  - If your server can't do QR sign-in, the page says so instead. The screen is never in screenshots, screen recordings or Recents while it's open, as the QR code gives access to your account for a few minutes.
+- **Send a location.** The **+** menu in the message box has a new **Location** item. It opens an OpenStreetMap map (no Google Maps) with a pin in the middle:
+  - **Send my current location** reads where you are once from Android's own location service (no Google Play services, never in the background) and shows it on the map before sending.
+  - **Send the pinned location** sends wherever the pin is: move the map, or tap a spot to move it there. The round button on the map jumps to where you are.
+  - Before anything is sent, a preview shows the spot on a small map, its coordinates (and how accurate your location is), with an optional **Description**.
+  - The first time, Android asks for location access. ChatCtrl asks for precise location; if you only allow approximate, it says the spot may be a few kilometres off. If you say no, or location is off, you can still drop a pin.
+  - It's sent as a standard Matrix location (`m.location` with a `geo:` link, your description, the map's zoom and whether it's your own location or a pin), so Element X, Element Web and other apps show it on their maps. A reply that was being written is sent as a reply.
+  - The map is dimmed in dark mode, and map tiles come from tile.openstreetmap.org and are cached on the phone.
+- **Locations open on a map in the app.** Tapping a location someone sent now opens it full screen on an OpenStreetMap map with a pin, the description, the coordinates (with **Copy**) and the accuracy when it's known, plus **Open in maps app** for directions in another app (only the coordinates are passed on). Location messages in the chat show their description and coordinates. Locations from the media gallery still open in your maps app.
+
+### Changed
+
+- The app now asks for the **location** permission (only when you send your current location) and uses the **camera** for scanning QR codes as well as for video calls.
+
+### Not included
+
+- **QR code verification** (scanning or showing a QR code instead of comparing emojis) isn't possible yet: the Matrix Rust SDK that ChatCtrl (and Element X) is built on only offers emoji and number comparison for verification so far. A device signed in with a QR code is already verified, so it doesn't need it.
+
+## 1.8.0
+
+### New
+
+- **Light mode that follows the device theme.** ChatCtrl now switches between the dark Ctrl look and a new light one ("Signal Light") on its own, following your phone's dark/light setting (including scheduled or automatic dark mode). There's no setting for it in the app and wallpaper (Material You) colours are still not used.
+  - **Light colours:** a warm off-white background (#F5F5F1), white cards, sheets and dialogs with thin #DEDED7 borders, near-black text (#0B0B0D) and grey secondary text (#5C5C64). Thin dividers between rows (#E6E6E0) and slightly darker borders around buttons, fields, the profile picture and the bottom bar (#D2D2CA).
+  - **Accent:** fills stay the same violet (#B48CFF) with near-black text in both modes: the unread hero card, main buttons, the selected tab, switches that are on, PIN dots, your own message bubbles and the send button. Violet *text and icons* (the slash in the ELEMENT/CTRL wordmark, unread times, links in previews, focused text field borders, the fingerprint key, banner icons, text buttons) use a deeper violet (#6A3BDB) in light mode so they're readable on white.
+  - **Chats:** your own bubbles stay violet with near-black text; other people's bubbles are white with a thin #DEDED7 border. Names in group chats use darker versions of each person's colour so they're readable on light backgrounds.
+  - **Switches:** off is a light grey track (#DCDCD5) with a grey knob; on is violet with a dark knob.
+  - **Progress bars** use a light grey track with a near-black fill (violet for the main ones).
+  - **Lock screen:** white keypad keys with thin borders, empty PIN cells outlined in #C9C9C1, the fingerprint key outlined in the deeper violet.
+  - **Bottom bar:** white at about 92 % with a thin border, floating over the list as before.
+  - **Errors** are shown in a deeper red (#D93636) in light mode.
+  - **Status and navigation bars** use the app's background colour, with dark icons in light mode and light icons in dark mode.
+- Switching the phone between dark and light while ChatCtrl is open changes the app straight away.
+
+### Changed
+
+- The call screen, the photo and video viewer and video thumbnails stay dark in both modes, so pictures and video come first.
+- In dark mode nothing changes from 1.7.0.
+
+## 1.7.0
+
+ChatCtrl gets the new **Ctrl / Signal** look shared by the whole Ctrl series: near-black, high-contrast, one violet accent (#B48CFF), new fonts and squarer shapes. Every feature, setting and screen works as before; only the look has changed.
+
+### Changed
+
+- **Dark only.** The app now always uses the Ctrl dark palette: a #08080A background, #141417 cards and sheets with thin #232328 borders, #F4F4F2 text, muted grey secondary text and a violet accent. The status and navigation bars use the same background with light icons, whatever the phone's own theme is.
+- **New fonts.** All text is set in **Space Grotesk**; times, IDs, server addresses, section labels and the wordmark use **JetBrains Mono**. Both are bundled in the app (nothing is downloaded) and replace Manrope.
+- **New type scale.** Big bold headlines with tight letter spacing (40 sp screen titles, 56 sp display), 18 sp titles, 16 sp body text, and small upper-case mono labels with wide spacing above each settings group.
+- **Squarer shapes.** Cards have 22 dp corners, big cards 26 dp, buttons and controls 14–16 dp, badges 9–10 dp. Status dots and unread markers are small rounded squares instead of circles. Profile pictures and chat avatars are rounded squares.
+- **Top bar.** The chat list and Explore now show an **ELEMENT/CTRL** wordmark (in JetBrains Mono, the slash in the accent colour) with the screen title below it, and your profile picture on the right as a 44 dp rounded square with a thin border. A small accent square on its corner shows you're connected. Tapping it still opens your profile and settings.
+- **Detail screens** (chats, settings, room details, search, devices…) have a square 44 dp back button with a border instead of a plain arrow, and the title in Space Grotesk. Top bars have no coloured background.
+- **Unread hero card.** The top of the chat list has a large violet card with the number of chats that have something new (unread messages or invites) and how many chats you have.
+- **Chat list rows** are plain rows separated by thin dividers. The time of the last message is shown in mono, in the accent colour when there's something unread and grey otherwise. Unread counters are small rounded rectangles.
+- **Filter chips** (All, Unread, People…) are square-cornered; the selected one is filled with the accent colour.
+- **Message bubbles.** Your own messages are in the accent colour with near-black text; other people's are on the dark surface colour with a thin border. Bubbles have 18 dp corners. Replies, link previews, poll answers and file progress inside your own bubbles use the bubble's text colour so they stay readable. Reactions are small square-cornered chips with a border (accent border for your own). Day separators and the "New" marker are small mono labels. Message times are in mono.
+- **Bubble styles** in Settings › Appearance › Bubbles are kept: Modern and Vivid now both use the Ctrl bubbles; Round keeps the small tail, Outlined keeps outlines, Sharp and No bubbles are unchanged in layout.
+- **Message box.** The floating composer is a flat dark island (surface colour with a thin border, no glow or shadow) with 22 dp corners. The send and voice buttons are accent rounded squares. The recording bar matches.
+- **Bottom bar.** The Chats/Explore bar floats 28 dp above the bottom with 20 dp side margins: a dark bar with a thin border, where the selected tab is a violet rounded rectangle with its icon and name and the other tabs are grey icons. On tablets the side rail uses the same colours.
+- **Switches.** All switches are the new Ctrl switch: a rounded rectangle with a square-ish knob, violet with a dark knob when on, dark grey with a grey knob when off. They are still announced as switches by TalkBack.
+- **Buttons and text fields.** Main buttons are filled with the accent colour with dark text; secondary buttons are dark with a thin border. Text fields are dark with a thin border and turn violet when you type in them.
+- **Dialogs and bottom sheets** are on the dark surface colour with 26 dp corners and a thin border.
+- **Lock screen.** A violet rounded-square lock icon, a small "VKNXWORKS · CTRL" label and a big "Locked" title. The PIN dots are small squares (violet when entered, outlined when empty) and the keypad keys are dark rounded rectangles with mono digits. The fingerprint button now sits on the keypad (bottom left, outlined in violet) while no PIN is typed; once you've typed enough digits that spot becomes OK. The delete key is a plain grey icon. How the lock works (PIN, fingerprint, lockout, "Forgot PIN?") is unchanged.
+- **Profile page.** Your picture or initial in a 68 dp violet rounded square, your name, and your Matrix ID and server in mono. Settings are grouped in dark cards with thin dividers between rows and mono group labels (ACCOUNT, PRIVACY AND SECURITY…). **Support ChatCtrl** is now a large violet button at the bottom of the page, followed by a "GOOGLE-FREE · TELEMETRY-FREE · ARM64" footer (also at the end of Settings).
+- **Icons** use the outlined style throughout.
+- Empty states, banners (notifications, battery, verification), the "Call in progress" banner, the onboarding and verification screens and the call screen all use the new cards, buttons and colours.
+
+### Removed
+
+- **Theme** (Follow system / Dark / Light / Pure black) and **Use wallpaper colours** are gone from Settings › Appearance: ChatCtrl is dark only and always uses the Ctrl colours. A theme or wallpaper-colour choice you made before is ignored.
+- The Manrope font.
+- The blurred glass glow and drop shadows on the tab bar and message box (they're now flat, as in the rest of the Ctrl series).
+
+## 1.6.12
+
+### New
+
+- **Audio output button in calls.** The call's button bar now has an audio output button (the speaker icon, next to hang up). Tap it to choose where the call plays: earpiece, speaker, Bluetooth earphones, or a wired or USB headset. The one in use is marked. Before, this was only reachable through the call's settings. Your choice is passed on to the call itself, so its own menu always agrees.
+
+### Changed
+
+- **The call's buttons sit in a floating island**, the same frosted-glass look as the message box and tab bar in the rest of ChatCtrl: rounded, slightly see-through with a soft blur of the video behind it, a light edge along the top and a shadow so it floats. The bar takes up a little less height at the bottom of the screen, leaving more room for video. Picture-in-picture keeps its compact layout.
+
+## 1.6.11
+
+### Fixed
+
+- **Calls work with Bluetooth earphones.** With earphones connected, a call could be completely silent: you couldn't hear the other person and they couldn't hear you. The call screen's audio engine (the one inside Android's WebView) only uses Bluetooth earphones for calls when the app has Android's **Nearby devices** permission. ChatCtrl didn't have it, so the engine kept moving the call back to the phone's speaker while ChatCtrl moved it to the earphones, and the sound got lost both ways.
+  - ChatCtrl now asks for **Nearby devices** before a call starts (once; Android remembers your answer). It's only used to send call audio to your earphones; it doesn't scan for or connect to devices.
+  - If you don't allow it, calls stay on the phone's earpiece or speaker, so you can always hear each other, and the earphones aren't offered in the call's audio menu.
+  - If you allow it during a call, it takes effect from the next time ChatCtrl starts.
+
+## 1.6.10
+
+### Fixed
+
+- **Calls with Bluetooth earphones are more reliable.** Several things could leave a call silent on Bluetooth earphones, and they're now handled:
+  - Earphones that offer both classic Bluetooth and Bluetooth LE Audio were listed twice, and the call could pick the LE Audio route that not every phone can use for calls. They're now listed once, using the classic call route when it's there.
+  - When Android refuses to send the call to the earphones, the app now tries the earphones' other Bluetooth mode, and otherwise falls back to the phone's earpiece or speaker, instead of leaving the call without sound.
+  - Bluetooth call audio takes a moment to connect: two seconds after switching, the app checks the call really is on the earphones and asks Android again if it isn't.
+  - Earphones re-announce themselves with a new ID when they switch from music to call mode. A call that had picked them now follows them instead of losing its sound.
+  - Earphones connected during a call show up in the call's audio menu straight away (and are switched to), instead of only after another change.
+
+### New
+
+- What the call's audio routing does (which devices were found, what Element Call picked, whether Android accepted it, where the sound actually goes) is now written to **Settings › About › Connection log**, so if a call is still silent, the log shows why. It names only the kind of device (earpiece, speaker, Bluetooth…), not its name.
+
+## 1.6.9
+
+### Fixed
+
+- **ChatCtrl now asks for permission to show notifications.** On Android 13 and newer an app has to ask before it can show any notification. ChatCtrl only asked when you turned "Notifications on this device" on, but that switch starts out on, so on a fresh install the question never came and messages arrived without any notification (seen on Samsung phones). The app now asks once, right after you sign in.
+- **The notifications switch tells the truth.** Settings › Notifications › "Notifications on this device" now only shows as on when Android actually lets ChatCtrl show notifications. Turning it on asks for the permission, or, if you said no before or turned notifications off in Android's settings, opens ChatCtrl's notification settings in Android.
+
+### New
+
+- A **"Notifications are off"** banner on the chat list when notifications are on in ChatCtrl but Android isn't letting it show them (permission not given, notifications turned off for the app, or the Messages category switched off). **Allow** asks for the permission or opens the right Android settings page. It disappears as soon as notifications work.
+
+## 1.6.8
+
+### Fixed
+
+- **Call updates no longer clutter your chats.** Every time someone joined or left a call, the chat showed a line like "Axel changed org.matrix.msc3401.call.member" under the "started a call" message, often several in a row. These are the behind-the-scenes updates calls use to keep track of who's in them, and they're now hidden everywhere in the chat, including when **Show room events** is turned on. The call itself still appears as "started a call".
+- **The chat list shows "📞 Call" instead of that technical name** when a call update was the latest thing in a chat.
+
+## 1.6.7
+
+### Fixed
+
+- **Calls from ChatCtrl now ring on the other person's phone.** When you called someone who uses Element X (on iPhone or Android), their phone only showed a "call started" message instead of the incoming-call screen, even though ChatCtrl asked it to ring. Before ringing, Element X checks that the caller is really in the call, and it couldn't read ChatCtrl's "I'm in this call" announcement because one detail it needs (which call room on the server the call uses) was missing. That happened with servers that tell apps about their call server in the newer way, as current Synapse does. ChatCtrl now always includes it, the same way Element Desktop does, so Element X sees the call and rings like a phone call.
+- **Calls between two ChatCtrl phones** are fixed by the same change: ChatCtrl also checks that the caller is in the call before ringing, and couldn't read the announcement from another ChatCtrl either.
+
+## 1.6.6
+
+### Fixed
+
+- **Calls from a chat with one person ring again.** When you called someone from a one-to-one chat, their phone sometimes only showed a "call started" message instead of ringing like a phone call. ChatCtrl counted anyone who had once been invited to the chat but never joined, so a single old invite made it treat the chat as a group room and start the call without ringing. Now only the people who have actually joined count, the same way Element Desktop decides, so a chat between the two of you rings the other person's phone even if an old invite is still hanging around.
+- **Those chats also look like chats again.** The same old invites made some one-to-one chats appear under Rooms instead of People, show room settings (with Invite and room name options) instead of the other person's profile when you tap the name, and show their notifications as group-room notifications. They now show as a normal chat with that person everywhere in the app.
+
+## 1.6.5
+
+### Fixed
+
+- **Fingerprint unlock works again after you leave the app.** Once you'd left ChatCtrl with the back gesture or by swiping home, the lock screen no longer asked for your fingerprint when you came back, and tapping **Use fingerprint** did nothing either; only the PIN worked until the app was force-closed. The fingerprint prompt was asked for while the app was still coming back on screen, and the phone dropped it without answering, which left ChatCtrl waiting for an answer that never came. Now the prompt only opens once ChatCtrl is fully back on screen, a prompt that never answered can't block the next one, and the lock screen offers your fingerprint again every time you come back to it, not just the first time after it locked.
+
+## 1.6.4
+
+### Security
+
+- **Room links ask before you join.** Opening a matrix.to or matrix: link to a room you're not in joined it straight away, without asking, and a link to a room you were invited to accepted the invite. Now ChatCtrl asks **Join …?** first, with the room's name, topic and number of members when your server can show them, and the room's address so you can check where the link really goes; nothing happens until you tap **Join**, and **Cancel** drops the link. A link to a room you're invited to now opens that room's invite, where you choose **Accept** or **Decline** yourself. A link that arrives while ChatCtrl is locked waits until you unlock, and then still asks.
+- **The app lock now also works during a call in picture-in-picture.** ChatCtrl never counted shrinking a call to the small picture-in-picture window as leaving the app, so it never locked during a call, however long it went on. Now it does: with **Lock again: as soon as you leave** it locks the moment the call goes to picture-in-picture, and with a lock time it counts from then. The call carries on; the small window shows a lock instead of the call, and you unlock when you open it full screen or go back to ChatCtrl.
+- **Shared files can't point back to ChatCtrl's own files any more.** A share from another app with an address like "content://0@…" (with a user number in front) slipped past the check that stops other apps from making ChatCtrl read and send its own private files, such as your chat database. That form is now recognised and refused too.
+
+### Privacy
+
+- **No hidden dependency list in the app file any more**: the build tools used to tuck an encrypted list of the libraries ChatCtrl is built with into the APK's signature block. Only Google can read it, so nobody checking the app could see what it holds. It's now left out, the same as in the other Ctrl apps. Nothing changes in how the app works.
+
+## 1.6.3
+
+### Changed
+
+- **Devices and Security & recovery use the series cards**: their rows now sit in rounded cards with a heading above each one (This device, Other devices, Verify this device, Recovery), with round icons, the same as Settings, the You page and the other Ctrl apps. Before, they were flat lists with small section labels. Everything on them works the same: tap a device for its details, rename or sign out; **Sign out all other devices** and **Manage on your account page** (with its explanation under the card) are in cards of their own; your Session ID and Session key are still copied with a tap.
+- **Whole sentences instead of joined pieces, ready for translations**: thread summaries ("2 replies · latest message"), chat previews ("🖼 Image", "📎 file name"), "removed by … : reason", the chat bubble setting's summary, "Search this chat", "This is the beginning of this room", "Verify …" (now with the person's Matrix ID when they have no display name, instead of "user") and the " · " between details are now each one piece of text.
+
+### Fixed
+
+- **Thread summaries count correctly**: "1 reply" and "2 replies" now come from the app's plurals.
+
+## 1.6.2
+
+The last screens now look like the rest of ChatCtrl and the other Ctrl apps, and all text is ready for translations.
+
+### Changed
+
+- **Devices, Security & recovery and the other inner screens use the series top bar**: Devices, Security & recovery, Verify this device / Verify user, Recovery key, Sign in, New chat, Create room, Room info / Chat info, People, a person's Profile, Media and files, and the "Room isn't available yet" screen now have the same plain top bar (back arrow and title on the app background) as You and Settings. Before, they used a different, older bar.
+- **Your profile picture looks the same as in the other Ctrl apps**: at the top right of every tab and at the top of the You page it's your Matrix avatar when you have one, otherwise the first letter of your name on a softly tinted circle in the app's colour (before, your initial in white on a randomly coloured circle). Other people keep their coloured initials in chats.
+- **All text is now in one place, ready for translations.** About 500 pieces of text that were written straight into the code, including the whole chat screen (composer, message menu, polls, voice messages, typing and read indicators, attachments, link warnings), room info and members, devices, security and recovery, verification, sign-in, push setup, notifications and error messages, now come from the app's text resources. The wording stays the same.
+
+### Fixed
+
+- **Counts read correctly in the singular and plural**: "1 member", "1 vote", "Final results · 1 vote", "1 new message" in notifications, "Signed out 1 device" and "Sign out 1 device?" instead of "1 members", "1 votes" and so on.
+
+## 1.6.1
+
+The call screen is now built from source, without Google's code. Calls work exactly as before.
+
+### Privacy
+
+- **Element Call is now built from source**: the call screen (Element Call 0.28.0, the same release Element X bundles) used to come prebuilt from Element's Android package. ChatCtrl now builds it itself from Element Call's published source code, and every release is built that way, so what's inside is exactly what's in the source plus ChatCtrl's changes, which are public in the `element-call` folder of the repository.
+- **What was removed from it**, all of it code that calls inside an app never use and that was already switched off in 1.6.0, now left out of the app entirely instead:
+  - **Google reCAPTCHA** and Element Call's own **sign-up and account pages**, with their links to Google's privacy policy and terms of service.
+  - **PostHog analytics**, including its lists of search engines and web crawlers (Googlebot and others).
+  - **Sentry crash reporting**.
+  - **Bug-report (rageshake) upload**: nothing in the call screen can send logs anywhere, and requests from other people in a call to send them your logs are ignored.
+  - **Background blur**, which needs Google's MediaPipe and was never available on phones anyway.
+- **What's still named "Google" in the call screen, and why**: only names, no Google code or services: the message type names of the protocol the LiveKit call service speaks (such as `google.protobuf.Timestamp`), the `x-google-…` settings in WebRTC video connection descriptions, which calls need, and Google in the Matrix library's list of sign-in providers. Nothing in the call screen contacts Google.
+- **Checked on every build**: the build fails if any of the removed code comes back, and the call screen is started the way ChatCtrl starts it to check that it loads and tries to reach nothing but your homeserver.
+- **Nothing changes in how calls work**: the same call screen, the same calls with Element X and Element Web, the same server setup and the same call service your homeserver announces.
+- **README**: the Calls, Privacy, Build from source and License sections say how Element Call is built, which release and commit it's from, and what ChatCtrl changes. The APK carries Element Call's licence (AGPL-3.0) and a note of its source next to it.
+
+## 1.6.0
+
+Voice and video calls, compatible with Element X and Element Web.
+
+### New
+
+- **Voice and video calls** in direct chats and rooms. Tap the phone (voice, in direct chats) or camera (video) button at the top of a chat. Calls use MatrixRTC, the same calls Element X and Element Web make, so you can call anyone on your homeserver who uses them. The call screen is Element Call, the same one Element X bundles (version 0.28.0), shipped inside ChatCtrl and shown in your phone's own WebView: nothing of it is loaded from the web.
+- **Join a call that's going on**: a chat with a call in progress shows a **Call in progress** banner with how many people are in it and a **Join** button (and a voice-only join in direct chats). The chat list shows a camera icon next to chats with a call going on.
+- **Incoming calls ring**: when someone calls you in a direct chat, ChatCtrl rings on a full screen, also over the phone's lock screen, with **Answer** and **Decline** (in the notification too). It stops ringing when the caller hangs up, when you answer or decline on another of your devices, or after 90 seconds, and then leaves a **Missed call** notification. Declining tells the caller's phone to stop ringing. Ringing comes through the existing push through ntfy, so instant push has to be on. A call started in a group shows as a normal notification ("Started a call").
+- **During a call**: mute, camera on or off, switch between the front and back camera, and pick where the sound goes (speaker, earpiece, wired headphones or Bluetooth) on the call screen. The volume buttons control the call, and the screen turns off when you hold the phone to your ear on the earpiece.
+- **Picture-in-picture**: going back or home shrinks the call into a small floating window, so you can keep chatting. Closing that window hangs up.
+- **Ongoing-call notification** with **Hang up**, which keeps the call going while you use other apps or the screen is off.
+- **Settings › Calls**: shows whether your server is set up for calls (and which call service it uses), and on Android 14 and newer whether incoming calls may ring on a full screen, with a shortcut to allow it.
+- **Calls aren't set up on your server**: if your homeserver doesn't announce a MatrixRTC (LiveKit) call service, the call button explains that instead of opening a call, with a link to the README's new **Calls** section on what Synapse, LiveKit and lk-jwt-service need.
+
+### Changed
+
+- **The app lock and calls**: answering a call or opening the call screen while ChatCtrl is locked shows the lock screen first; a call that's already running keeps going when the app locks (the connection to your homeserver is only closed once the call has ended); and the call screen never shows in Recents while the app lock is on. With message content hidden in notifications (the app lock's default), the ringing screen and call notifications say "Incoming call" without the caller's name or picture.
+- **Permissions**: ChatCtrl can now use the camera and microphone for calls, and asks for them only the first time you start or answer a call. It also declares what Android needs for an ongoing call (a phone-call foreground service, and full-screen ringing). It doesn't get access to your phone calls or contacts.
+- **Signing out** now also clears what the call screen stored on the phone.
+- **README**: new Calls section (how calls work, the app lock, and the server setup for Synapse, LiveKit and lk-jwt-service), the network destinations for calls in Privacy, and Element Call's licence (AGPL-3.0). Calls are no longer listed under "Not included yet".
+
+### Privacy
+
+- **Calls only go through your own server's call service.** ChatCtrl asks your homeserver which MatrixRTC (LiveKit) service to use and never falls back to a public one. During a call the phone talks to your homeserver, that call service, the LiveKit server it points to, and the TURN/STUN servers that LiveKit server hands out; the call screen refuses every other web address.
+- **No analytics or crash reporting in calls.** Element Call's PostHog analytics, Sentry crash reporting, bug-report upload and its fallback STUN server are all switched off, and the call WebView doesn't use Google Safe Browsing or send usage metrics. Element Call's source maps and its MediaPipe background-blur model are left out of the app, so background blur isn't offered in calls.
+
+## 1.5.0
+
+ChatCtrl now has the same layout as the other Ctrl apps. Your chats, encryption and settings are unchanged.
+
+### New
+
+- **Chats and Explore tabs** on a floating glass tab bar at the bottom of the screen, the same frosted island as in the other Ctrl apps. **Explore** is the public room directory that used to be under **New chat › Explore**: search rooms on your server or another one (such as matrix.org) and join them. On tablets and unfolded foldables the tabs are a side rail on the left, next to the chat list and the open chat.
+- **Your profile picture is at the top right** of Chats and Explore. Tapping it opens the new **You** page: your picture (tap it to change it), display name, Matrix ID and server at the top, then **Account** (display name, your profile, security and recovery, devices, manage account and the homeserver address), **Settings**, **Sign out**, and **About** with the version underneath.
+- **The Ctrl series look**: the same graphite colours, the Manrope typeface, rounded grouped cards, spacing and empty screens as the other Ctrl apps, with pink, the colour of ChatCtrl's icon, as its accent.
+
+### Changed
+
+- **Settings moved to your profile picture › Settings**, in the same grouped cards and order as the other Ctrl apps: **Appearance** (theme, wallpaper colours, chat bubbles), **Notifications**, **Privacy and security** (app lock, fingerprint, lock again, Hide in screenshots, Hide in recent apps), **Chats** (profile pictures, seen by, double-tap to react, room events, Enter sends, link previews), **Ignored people** and **Troubleshooting**. Before, tapping your picture at the top left of Chats opened one long Settings list. The You page is now the only way in.
+- **Your account moved to the You page**: display name, your profile, security and recovery, devices, manage account and the homeserver address used to be in Settings › Account; **Sign out** and **About** are on the You page too.
+- **Theme, Lock again, notification modes and double-tap reaction** are chosen from a sheet that slides up from the bottom, as in the other Ctrl apps, instead of a dialog.
+- **Use wallpaper colours is now off by default**, so ChatCtrl uses its own colours like the other Ctrl apps. If you had turned it on yourself it stays on; otherwise turn it on again in Settings › Appearance if you prefer your wallpaper's colours.
+- **The chat list** has a big "Chats" title like the other Ctrl apps' tabs, with search next to your profile picture, and the **New chat** button sits just above the tab bar. Empty screens ("No chats yet", "Pick a chat") use the series style.
+- **README**: describes the tabs and the You page, and every settings path now starts with your profile picture.
+- Everything else stays as it was: the shared app lock, recents staying blank while locked, Hide in screenshots and Hide in recent apps (both off by default), push through ntfy only with the 15-minute background check, the battery warnings, the two-pane tablet layout, and the chat timeline and composer.
+
+## 1.4.2
+
+### Security
+
+- **With the app lock on, the recent-apps preview always stays blank**, whatever **Hide in recent apps** is set to, so it never shows what's behind the lock. Android takes that preview the moment you leave the app, before it locks.
+- **README**: the App lock and privacy text now reads the same as in the other Ctrl apps.
+
+## 1.4.1
+
+### Changed
+
+- **Hide in screenshots** and **Hide in recent apps** are now two separate switches in Settings › Privacy and security, both off by default. **Hide in screenshots** makes screenshots and screen recordings show a blank screen; **Hide in recent apps** makes the recent apps view show a blank card instead of the app, while screenshots still work. If you had turned on the single "Hide from recents & screenshots" (or 1.4.0's "Hide in screenshots and recent apps") switch yourself, both are on after the update.
+- **The recent apps view now shows your chats unless you turn on Hide in recent apps.** Before, ChatCtrl always showed a blank card there; now it's your choice, off by default.
+- **Always hidden, whatever the switches say**: the lock screen, choosing or changing the app PIN, password sign-in and the recovery key screens, because a password, PIN or key is typed or shown there.
+- **README**: describes the two switches.
+
+## 1.4.0
+
+ChatCtrl's app lock is now the one every Ctrl app shares, with its own app PIN that also encrypts your saved sign-in.
+
+### Changed
+
+- **Updating with the app lock on:** the first time you open ChatCtrl, enter your old PIN (or use your fingerprint) one last time, then choose your new app PIN. You can't skip this step. The old PIN's hash and its fingerprint key are deleted as soon as the new PIN is set.
+- **The app PIN needs at least 6 digits** (the old lock accepted 4), and very obvious ones like 111111 or 123456 are refused. It's chosen and changed on a full-screen PIN pad instead of a dialog, and turning the lock off asks for it too.
+- **Settings > Privacy and security** replaces the App lock section, with the same rows as the other Ctrl apps: **App lock**, **Change app PIN**, **Unlock with fingerprint**, **Lock again** and **Hide in screenshots and recent apps**.
+- **Lock again** has the series' choices: as soon as you leave the app (the default), after 1, 5 or 15 minutes or 1 hour away, or only when the app restarts. Your old choice carries over (30 seconds becomes 1 minute). Picking photos or files, sharing, opening a file or link, and the notification and battery settings no longer count as leaving the app, unless you stay away for more than 5 minutes.
+- **Unlock with fingerprint** has to be turned on again after you choose the new PIN (**Settings > Privacy and security > Unlock with fingerprint**), because it now unlocks the key that opens your sign-in. The PIN is also needed after the phone restarts and at least every 72 hours.
+- **Hide in screenshots and recent apps** now works without the app lock too, and keeps your old setting. The recent-apps screen still never shows your chats.
+- **Settings are in the same order as in the other Ctrl apps**: Appearance, Notifications, Privacy and security, then Account, Chats, Ignored people and Troubleshooting, with About last.
+- **Pure black theme**: **Settings > Appearance > Theme** now also has Pure black, as in the other Ctrl apps. **Material You colours** is now called **Use wallpaper colours**.
+- **Forgot your PIN?** now signs out on this phone and deletes its copy of your chats and keys, even when the app can't reach your homeserver. With recovery set up, your message history comes back after you sign in again.
+- **Removed the store listing files** (`fastlane/metadata/android/en-US`) that 1.3.1 added to the repo. Nothing changes in the app.
+
+### Security
+
+- **Your saved sign-in is encrypted with your PIN while ChatCtrl is locked** (with notifications off): the access and refresh tokens and the key to the encrypted message store can only be opened after unlocking, and the connection to your homeserver is closed while the app is locked. The key that decrypts them only exists in memory while the app is unlocked and is wiped the moment it locks.
+- **With notifications on**, the background check and push still need your account while ChatCtrl is locked, so your saved sign-in then stays encrypted with the Android Keystore only, as without the app lock. Settings > Privacy and security says so, and message text stays hidden in notifications unless you choose to show it.
+- **The PIN can't be guessed off the phone.** It's never stored. It's stretched with 600,000 rounds of PBKDF2 and mixed with a secret held in the phone's secure hardware (StrongBox where available). The old lock only stored a PBKDF2 hash with 120,000 rounds.
+- **Wrong PINs lock the screen**: after 5 tries you wait 30 seconds, doubling with every further 5 wrong tries up to 15 minutes. Restarting the app or the phone, or changing the clock, doesn't reset the wait.
+- **Fingerprint unlock can't be faked**: the fingerprint has to unlock the key that opens your sign-in, so a tampered "success" on a rooted phone doesn't open the app. Adding a new fingerprint turns fingerprint unlock off until you turn it on again with your PIN.
+- **The lock and PIN screens are never in screenshots** or screen recordings, whatever "Hide in screenshots and recent apps" is set to.
+- **No logs at all in release builds**: error logs, which could name a server or user, are now removed from the app too, like the other logs before.
+- **One library fewer**: the app lock no longer needs the AndroidX Biometric (alpha) and Fragment libraries; it uses Android's own fingerprint prompt.
+
+### Fixed
+
+- **README**: describes the new app lock, and the Ctrl series table lists AdCtrl and MemoCtrl.
+
+## 1.3.1
+
+### New
+
+- **Profile pictures in notifications**: message notifications now show the sender's profile picture next to their message, and the chat's picture (the group's picture, or the other person's for a direct chat) as the notification's icon, instead of a letter. This also works when the app hasn't been opened for a long time: pictures come through the Matrix SDK's own encrypted media cache on the phone, so once a picture has been seen it doesn't need the network again. A picture that can't be loaded within a few seconds never holds up the notification; the letter is shown instead.
+- The 15-minute background check's notifications (used when push isn't set up) show the chat's picture too.
+- Pictures are only shown when message content is shown: with app lock on, or "Show message content in notifications" off, notifications stay as plain "New message" without any picture. They're cleared from memory on sign-out, and nothing new is written to storage.
+
+## 1.3.0
+
+### Changed
+- **Push notifications through ntfy only.** Instant push now always comes through [ntfy](https://f-droid.org/packages/io.heckel.ntfy/), and other push apps can no longer be picked. If you used ntfy before, nothing changes: your registration and your homeserver's pusher are kept as they are. If you used another push app, ChatCtrl removes its registration there and moves to ntfy automatically when ntfy is installed; otherwise instant push is off until you install ntfy and turn it on in *Settings → Notifications → Delivery*. The background check keeps running either way.
+- **Pushes only go through your own ntfy server.** Your homeserver now always sends pushes to the Matrix push gateway built into your ntfy server (`/_matrix/push/v1/notify`). The public UnifiedPush gateway (`matrix.gateway.unifiedpush.org`) is no longer used as a fallback. If your ntfy server's gateway can't be found, *Settings → Notifications* shows a clear error (with a **Try again** button) instead of quietly sending pushes through another server, and a pusher left over from the public gateway is removed from your homeserver.
+- **The 15-minute background check now always runs**, also when push through ntfy is on. If a push never arrives (ntfy lost its connection, or your homeserver dropped the pusher), the message still turns into a notification within about 15 minutes. Messages that already showed a notification from a push aren't shown a second time.
+- **The Notifications settings warn clearly when something will stop notifications**, each with buttons to fix it:
+  - **ntfy isn't installed**, with an **Install ntfy** button that opens ntfy on F-Droid. This is checked again every time you come back to the screen, so it disappears as soon as ntfy is installed.
+  - **ChatCtrl is battery-restricted** (battery optimisation on, or battery usage set to Restricted), with **Allow** and **App info** buttons.
+  - **ntfy is battery-restricted**: Android can then cut ntfy's connection to your ntfy server while the phone sleeps. With **ntfy's App info** (to set its battery usage to Unrestricted) and **Open ntfy** buttons.
+  - **Instant push isn't working**, with the reason in full (for example "ntfy didn't answer" or a missing gateway) and a **Try again** button.
+- **The "Notifications may be missed" banner** in the chat list now also appears when ntfy is battery-optimised, and its button takes you to ntfy's battery setting.
+- **ntfy temporarily unavailable**: when ntfy reports that your ntfy server is down, *Delivery* now says so. Push picks up again by itself once the server is back, and the background check keeps running in the meantime.
+
+### Fixed
+- **Messages that sometimes didn't arrive as notifications.** A message pushed while ChatCtrl was still catching up on an earlier one could wait up to half a minute, plus a growing back-off delay, before it was fetched; it is now fetched right away. A message that can't be fetched yet (no network, homeserver not answering) is now tried again within 20 to 60 seconds in a separate job, so new pushes never wait behind it, and after three tries it still shows a "New message" notification instead of nothing.
+- **Push setup no longer hangs on "Setting up push…"** when ntfy doesn't answer: after 30 seconds it says so and asks you to open ntfy once.
+
+### Privacy
+- **De-Googled.** The push library ChatCtrl used is gone, together with the Google crypto library (Tink) it brought along and its built-in check for Google Play services. ChatCtrl now talks to ntfy directly, contains no Google libraries or services and never contacts Google. The "ntfy on Play" button and every other mention of Google in the app are gone; ntfy is only offered from F-Droid.
+- **README**: the Google-free line now reads "Google-free and de-Googled", push is described as ntfy-only with the background check as a fallback, and the setup steps are updated.
+
+## 1.2.15
+
+### Privacy
+- **No more usage stats: ChatCtrl is now telemetry-free.** The optional anonymous usage stats are gone completely, along with the Usage stats setting in Settings and the one-time question after sign-in. The app no longer contacts VKNXWorks' stats server at all, and the settings it used are deleted from your phone when you update. ChatCtrl now only talks to your homeserver and, if you use push, your push app's server (such as your ntfy server).
+
+### Changed
+- **README**: a Screenshots section (screenshots are coming soon), and a link preview image (`.github/assets/social-preview.png`) with ChatCtrl's icon, name and summary, for when the repo is shared on Reddit, Discord or elsewhere. It also gets a "Telemetry-free" badge and tag, and a Privacy section listing exactly what ChatCtrl connects to, in place of the old Usage stats section.
+
+## 1.2.14
+
+### Changed
+- **One About section in every Ctrl app**: Support, Report a bug, Source code and Licence (GPL-3.0), with the version underneath, at the bottom of Settings (tap your profile picture at the top of Chats). The rows are in the same order, with the same wording and icons, as in the other Ctrl apps. **Report a bug** ("Found a problem or have an idea? Open an issue on GitHub") opens ChatCtrl's issue tracker, **Source code** opens its GitHub page and **Licence** opens the GNU General Public License v3.0. The version ("ChatCtrl 1.2.14 · VKNXWorks") is shown under the section instead of in its own row.
+- **Homeserver moved to the Account section.** The row showing your homeserver address (tap to copy, with the "not encrypted" badge for http:// servers) is now under Account instead of About.
+- **New Troubleshooting section** with the **Connection log** and the **Matrix Rust SDK** version the app is built with, both of which used to be under About.
+- **Sign out** is now just above the About section, which is the last section in Settings.
+
+## 1.2.13
+
+### New
+- **Support ChatCtrl** under Settings → About opens VKNXWorks' GitHub Sponsors page in your browser. ChatCtrl is free and open source, and this is the place to sponsor its development if you'd like to. Settings opens when you tap your profile picture at the top of Chats; the new row is the first one under About, above Homeserver.
+- The README's **Support the project** section now also points to the **Support ChatCtrl** button.
+
+## 1.2.12
+
+### Fixed
+- **Messages that arrive after the app hasn't been used for a while are decrypted much sooner.** When a message's key hadn't reached your phone yet (it was asleep or offline when the message was sent), the app now fetches that key from your encrypted key backup straight away, instead of waiting for another device to send it. This works both for notifications and for messages you see when opening a chat.
+- **"🔒 New encrypted message" notifications now update themselves.** After a push, the app keeps syncing that chat for up to 30 seconds in the background (like Element X's "opportunistic sync") so the key can come in, then fetches the message again and replaces the placeholder with the real text in the same notification, without ringing a second time.
+- After any message notification, the app also keeps that chat syncing for about 10 seconds, so when you tap the notification the chat is already up to date and decrypted.
+
+## 1.2.11
+
+ChatCtrl is now completely Google-free. Nothing changes in how you use it.
+
+### Privacy
+
+- **Emoji no longer make ChatCtrl ask Google for a font.** A standard Android library inside the app asked Google Play services for a downloadable emoji font every time ChatCtrl started, which could make Google Play services fetch that font from Google. This lookup is now switched off: emoji are drawn with your phone's own emoji font. On phones without Google Play services nothing changes; on other phones, emoji can look slightly different if the phone's built-in emoji font is older.
+- **Checked: ChatCtrl is Google-free.** It contains no Google Play services, Firebase, ML Kit, Google Cast or Play Core, and it doesn't load fonts or anything else from Google's servers. It also never switches server addresses by itself: it always uses the address you set up, and only you can change it.
+
+### Changed
+
+- **README: new Google-free line** under Requirements: works without Google Play services, contains no Google libraries that contact Google, and draws emoji with your phone's own emoji font.
+- **README brought up to date with ChatCtrl 1.2.10.** The feature list no longer suggests you can send stickers (the sticker and GIF picker was removed in 1.2.1); it now says stickers and GIFs other people send still show in chats. It now also mentions swipe to reply, double-tap to react, read receipts, the six chat bubble styles, the media and files view for each chat, reply and Mark as read on notifications, member management and moderation, sharing into ChatCtrl from other apps, renaming and signing out devices, and hiding chats from Recents and screenshots. Getting started now uses the **Use another device** and **Use your recovery key** buttons by name. The Usage stats section now lists the one other server the app contacts: your push app's server, once, to check for a Matrix gateway when you turn on push. No change to the app itself
+
+## 1.2.10
+
+A privacy review of the new optional usage stats and of every connection the app makes. The stats are still off unless you said yes.
+
+### Security
+
+- **Switching usage stats off now throws away anything not yet sent.** Before, a stat recorded just before you switched them off could still be waiting in the app, and if you switched stats back on within a few seconds it could have been sent after all. Now everything waiting is discarded the moment you switch stats off, so nothing recorded before that point can ever go out.
+- **Settings shows when pushes go through the public UnifiedPush gateway.** If your push app has no Matrix gateway of its own (ntfy has one), your homeserver sends pushes through the public gateway run by the UnifiedPush project. A push only ever carries the room and message IDs and an unread count, never the message, sender or room name, but it's still a third party, so *Settings → Notifications → Delivery* now says "through the public UnifiedPush gateway" when that's the case. The README explains what a push contains.
+
+## 1.2.9
+
+### Changed
+
+- **New app icon, matching the rest of the Ctrl series.** The icon is now the same dark keycap as the other Ctrl apps, with two pink chat bubbles, an outlined one behind a filled one with three dots on its screen. The themed (monochrome) icon on Android 13+ home screens uses the same design.
+- **All Ctrl apps in the README.** The README's Ctrl series table now lists all 14 apps. New in the table: [ArrCtrl](https://github.com/VoidedKN0X/ArrCtrl) (Radarr, Sonarr, Prowlarr, Bazarr, qBittorrent, autobrr and Cleanuparr in one app), [PaperCtrl](https://github.com/VoidedKN0X/PaperCtrl) (scan and browse documents on Paperless-ngx), [ProxCtrl](https://github.com/VoidedKN0X/ProxCtrl) (manage your Proxmox VE server) and [TrueCtrl](https://github.com/VoidedKN0X/TrueCtrl) (monitor and manage your TrueNAS server). Every app in the table is also in the [CtrlF-Droid repo](https://voidedkn0x.github.io/CtrlF-Droid/) for automatic updates.
+
+## 1.2.8
+
+### New
+- **Optional anonymous usage stats.** After you sign in, ChatCtrl asks once whether you'd like to share anonymous usage stats. Nothing is sent unless you tap **Share stats**, and you can switch it on or off any time in **Settings › Usage stats**.
+- **What's shared:** which screens you open (the kind of screen, for example the chat list, a room or Settings, never which room or person), whether you send a text, voice message, picture or file (only the kind of message), whether you use search in the chat list or inside a chat, the app version, Android version, phone model, language, phone or tablet, and whether your notifications come through push, the background check or are off.
+- **What's never shared:** your homeserver, your Matrix ID or anyone else's, room names or IDs, who you talk to, what you write, send or search for, how many messages you send in any chat, or any ID that follows you between sessions. Each session gets a new random ID, and stats from before and after you switch them off and on again aren't linked.
+- **Where it goes:** to VKNXWorks' own self-hosted server (Aptabase), not to Google or any analytics company. Your messages still only go to your homeserver. Builds you make from source can't send stats at all, and the setting doesn't appear in them.
+
+### Changed
+- **PrintCtrl in the Ctrl series list.** The README's table of Ctrl apps now includes [PrintCtrl](https://github.com/VoidedKN0X/PrintCtrl), the app for Bambu Lab printers through a self-hosted Bambuddy server, and Spoolman spools.
+- The README has a new **Usage stats** section listing exactly what's collected.
+
+## 1.2.7
+
+### Fixed
+- **Coming back to the app after a while in the background no longer leaves it disconnected.** While the app sits in the background Android freezes it, and the connection it had open can die without the app noticing. Each start, stop and restart of the connection now has a time limit, so one that never gets an answer can't block the others, and after more than a minute away the app always opens a fresh connection when you return instead of trusting the old one.
+- The app now notices when the connection says it's running but hasn't received anything from the server for 40 seconds, and restarts it.
+- When the connection keeps failing, the app now also asks the server for a completely new sync session (from the third try), since the old one may have expired during the break.
+- **Last resort, automatic reload:** if the app still isn't syncing after 45 seconds on screen while the phone has a working network and your homeserver is answering, it reloads itself, exactly like force-stopping and reopening it, and reopens the chat you were in. This happens at most once every 10 minutes, so a server problem can't cause a reload loop. If app lock is on you'll be asked to unlock again.
+- "Online" now means a network that Android has confirmed actually reaches the internet, so Wi-Fi without internet (or a captive portal) no longer counts as a working connection.
+
+### New
+- **Reconnect** button on the chat list's connection banner ("Offline", "Connection problem", "Can't reach the server"): reloads the app's connection on the spot, without having to force-stop it in Android's settings.
+- **Connection log** in Settings › About: a record of what the connection did (going to the background and back, network changes, every start, stop and restart and how long it took). It contains no messages, names, servers or tokens. If disconnects still happen, tap it and use Copy to share what happened. It's deleted when you sign out.
+
+## 1.2.6
+
+### Fixed
+- **The app no longer loses its connection after you switch away and come back.** Leaving ChatCtrl stopped syncing and returning started it again, but the two could overlap: if you came back before the stop had finished, the stop landed last and the app sat disconnected (no new messages, nothing sending) until it was force-stopped. Syncing is now started and stopped from a single place, one step at a time, the way Element X does it, so this can't happen any more.
+- After a long break the server may have expired the app's sync session; the app now notices that the connection died and reconnects on its own, waiting a little longer after each failed try (1 second up to about half a minute) so it doesn't hammer the server.
+- When Wi-Fi or mobile data comes back (for example after the phone woke up or you left a dead spot), the app reconnects as soon as Android reports a working network, instead of staying in "offline" mode.
+
+### Changed
+- Briefly switching to another app (under 3 seconds) keeps the connection open, so coming straight back doesn't need to reconnect.
+
+## 1.2.5
+
+### Fixed
+- **Notifications no longer go missing when ChatCtrl hasn't been opened for a while.** Before, a push from ntfy had to be turned into a notification within the few seconds Android gives a sleeping app, and if the phone was in deep sleep the app had no network to fetch the message, so the notification was silently dropped. Now each push is saved first and fetched by a priority background job (the same approach Element X uses), which Android starts straight away and which keeps trying until the network is back, so the notification still arrives.
+- If a message really can't be fetched after a few tries (server unreachable, message not found yet), you now get a plain "New message" notification for that chat instead of nothing. Tapping it opens the chat, and it has Mark as read.
+- **Lost push registrations are repaired automatically.** Synapse quietly deletes a pusher when the push gateway reports it as unknown (for example after the ntfy server restarted), after which no pushes arrive at all. ChatCtrl now checks at every start and twice a day that the homeserver still has its pusher, and adds it back if it's gone.
+- Pushes that arrived while the app couldn't handle them are picked up the next time it starts.
+
+### New
+- **Run in the background** in Settings › Notifications shows whether battery optimisation is restricting ChatCtrl, and opens Android's prompt to allow it. Restricted apps get no network in deep sleep, which is the main reason notifications go missing (Element X asks for the same permission).
+- On OPPO, OnePlus and realme phones there's an extra shortcut to App info, where ColorOS keeps its own "Allow background activity" and "Auto launch" switches that can also stop notifications.
+- A banner on the chat list warns when notifications are on but the app is battery-restricted, with **Allow** and **Not now**. After Not now it only comes back if a message actually had to fall back to a plain notification.
+- Choosing ntfy (or another push app) in Settings now asks right away to let ChatCtrl run in the background.
+
+## 1.2.4
+
+### Security
+- **Sign-out wipe can't be left half done**: if the app is closed (or the phone turns off) in the middle of signing out, the next start finishes the job, removing any drafts, downloaded or decrypted attachments, files waiting to upload and notification state that were left behind. Before, some of these could stay on the phone after sign-out.
+- When the server signs this device out, syncing now stops before the account's data is deleted, so nothing new can be written back into the folders being removed.
+- Downloaded and decrypted attachments older than a day are now also removed while the app keeps running, not only when it starts, so they don't stay around for days when the app is never fully closed.
+- Error messages shown in the app now also hide tokens and passwords in the formats servers and the Matrix SDK use in JSON and debug output (for example `"access_token": "…"`), and web tokens (JWTs) used by OIDC sign-in.
+- The password field when signing out other devices now tells the keyboard not to suggest, learn or remember what you type.
+
+## 1.2.3
+
+### Security
+- **Recovery key screens are private**: the recovery key entry after sign-in, the Security & recovery screen and its dialogs (new recovery key, enter recovery key, identity-reset password) can no longer be captured in screenshots, screen recordings or screen sharing, whatever the app-lock setting.
+- The recovery key and identity-reset password fields now tell the keyboard not to suggest, learn or remember what you type.
+- Copying a new recovery key marks it as sensitive, so Android hides it from the clipboard preview and keyboards don't keep it in their clipboard history.
+- If a recovery key doesn't work, the error message never repeats the key, and the field is cleared once recovery succeeds.
+- The password sign-in screen is also protected from screenshots and recordings, and the typed password is no longer kept in Android's saved screen state.
+- **Reply** and **Mark as read** on message notifications now ask you to unlock the phone first when used from the lock screen, so nobody holding your locked phone can send messages or read receipts as you.
+- **Signing out now wipes everything** this device had for the account: besides the session, keys and message databases, also downloaded and decrypted attachments and voice messages, files waiting to upload, leftover databases from unfinished sign-ins, the list of already-notified chats, open notifications, link previews and pictures held in memory. Background checks stop too. The same happens when the server signs this device out, which now also drops the local push registration.
+- Pictures (including ones decrypted from encrypted chats) are only ever cached in memory, never written to storage.
+- Downloaded attachments are removed from the app's cache after a day, and the plain copies of files and voice messages you send are deleted as soon as they're handed to the encrypted send queue.
+- Downloaded attachments are stored under a full hash of their source, so two different files can never be mixed up.
+- Device-management requests and the push-gateway check no longer follow redirects (so your access token can't be forwarded to another server) and refuse oversized replies.
+- Error messages shown in the app have anything that looks like a token, password or URL query removed.
+- Release builds no longer write the Matrix SDK's logs, or the app's own info and warning logs, to the system log.
+
+## 1.2.2
+
+- Version numbers are now plain, with no build number on the end, and a new version only comes out when something in the app actually changes. Nothing else in the app has changed.
+
+## 1.2.1
+
+- Chat list: the time of the last message now always sits flush on the right
+- **Double-tap to react**: double-tap a message to react with ❤️ (or another emoji, or off, in Settings › Appearance), with a little pop
+- Quick reactions in the message menu start with the emojis you use most recently (shared with Element through your account)
+- **Media and files** in chat info, for direct chats and rooms: a photo and video grid and a list of files, audio and voice messages, by month
+- **Seen by**: small pictures under messages show who has read up to there; tap them for names and times (Settings › Appearance › Seen by)
+- Swipe a message to the right to reply: the reply arrow fills in with a little buzz once you've pulled far enough, and the keyboard opens ready to type
+- Profile pictures next to messages, in direct chats and next to your own messages too (Settings › Appearance › Profile pictures to turn off)
+- Messages sent close together are grouped: the profile picture sits by the last message of the group, and only that bubble keeps its tail
+- Fixed a black screen that could appear when going back or switching screens quickly, until the app was restarted
+- The message box island is evenly balanced: the + and send buttons line up with the text and sit the same distance from the edges
+- The "New messages" line goes away once you've read to the end, instead of staying put; marking a chat read from a notification moves it too
+- "Mark as read" on every message notification, including when message content is hidden
+- Removed the sticker and GIF picker, Tenor GIF search and "Add to my stickers". Stickers and GIFs other people send still show in chats
+- Verification now happens right after sign-in, before your chats appear: choose **Use another device** (approve in Element or ChatCtrl and compare emojis) or **Use your recovery key**. Requests started from your other device are answered on the same screen. An unverified device is asked again on every start until it's verified
+- Security hardening:
+  - Plain-http homeservers need an explicit "Not encrypted" confirmation and show a badge in Settings; no silent https→http downgrade
+  - Files shared into ChatCtrl must come from another app (no file: links or ChatCtrl's own files)
+  - While locked, chats aren't drawn at all (nothing for accessibility services to read); the app never leaves a snapshot in recent apps
+  - Message notifications show only "New message" on the lock screen; with app lock on, message content is hidden in notifications too (new setting: Show message content in notifications)
+  - PIN lockout survives clock changes and reboots, with longer waits after repeated wrong PINs; new PINs need at least 6 digits (existing PINs keep working)
+  - Fingerprint unlock is tied to a hardware-backed key (turn it on again once after updating)
+  - Locations only open as map locations; message links are limited to web, matrix and email addresses, and a link whose text shows a different address asks before opening
+  - Draft previews and the Tenor key are stored encrypted; nothing is included in Android backups or device transfers
+  - Pushes for rooms you're not in are ignored
+- New app icon: twin chat bubbles on deep purple, matching the other Ctrl apps; themed (monochrome) icon and notification icon updated to match
+- The first-start server list now offers just matrix.org and Mozilla, plus servers you used before and custom / self-hosted addresses
+
+## 1.2.0
+
+- **Instant push notifications** through ntfy or any UnifiedPush app (Settings › Notifications › Delivery). Messages are fetched and decrypted on the phone; notifications are grouped per chat with inline reply and mark-as-read
+- **Search inside a chat**, including encrypted chats, using an on-device index; tap a result to jump to it
+- **Voice messages**: tap the mic when the message box is empty, with a live waveform; voice and audio play inline with a seekable waveform
+- **Link previews** under messages (fetched by your homeserver; off in encrypted chats unless you turn it on)
+- **Drafts** are kept per chat and thread, and shown as "Draft: …" in the chat list
+- **Devices**: see your signed-in sessions, rename them and sign them out (password or your account page)
+- **App lock** with PIN and fingerprint, lock delay and hiding from recents, same as the other Ctrl apps
+- **Stickers** from Matrix image packs (yours and rooms'), "Add to my stickers" on any picture, and **GIFs**: animated playback, sending from the gallery, and Tenor search with your own key
+- **Tablet and foldable layout**: chat list and conversation side by side
+
+## 1.1.0
+
+- Chats follow new messages as they arrive, unless you've scrolled up to read; then a badge on the jump-down button counts what's new
+- The message box is now a floating frosted-glass island, like the other Ctrl apps, with replies, edits and @-mention suggestions in a small island above it
+- Choose a chat bubble design in Settings › Appearance › Chat bubbles: Modern, Round, Sharp, Outlined, Vivid or No bubbles (Element Web style), each with a live preview
+
+## 1.0.1
+
+- After signing in on an account that already uses encryption, a "Confirm it's you" step asks you to verify the device (another device or recovery key), like Element X. Unverified devices can't get message keys, which made messages slow to decrypt or stay locked
+- Messages that can't be decrypted now say when verifying or entering your recovery key would fix them, with a button to do it
+- Fixed background sync running non-stop (and notification checks being skipped) when Android started the app just for a notification check
+
+## 1.0.0
+
+First release.
+
+- Server picker on first start with popular public servers and custom/self-hosted addresses
+- Sign-in with OAuth (Matrix Authentication Service, including registration), password or SSO
+- Room list with filters, search, invites and quick actions
+- Timeline with rich messages, media, polls, threads, replies, edits, reactions, read receipts and typing
+- Attachments, mentions, polls and shares from other apps
+- Create rooms, start DMs, explore and join public rooms, matrix.to links
+- Room and member management, profiles, ignore, moderation
+- End-to-end encryption with emoji verification, recovery key and identity reset
+- Settings for profile, notifications, appearance; background notifications every ~15 minutes

@@ -1,0 +1,352 @@
+package com.vknxworks.chatctrl.ui.newchat
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.GroupAdd
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vknxworks.chatctrl.matrix.AccountService
+import com.vknxworks.chatctrl.matrix.DirectorySearch
+import com.vknxworks.chatctrl.matrix.MatrixSession
+import com.vknxworks.chatctrl.matrix.userMessage
+import com.vknxworks.chatctrl.ui.Avatar
+import com.vknxworks.chatctrl.ui.SectionHeader
+import com.vknxworks.chatctrl.ui.SettingRow
+import com.vknxworks.chatctrl.ui.TextInputDialog
+import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.statusBars
+import com.vknxworks.chatctrl.R
+import com.vknxworks.chatctrl.ui.ScreenTopBar
+import kotlinx.coroutines.launch
+import org.matrix.rustcomponents.sdk.UserProfile
+
+/** Start a direct chat, or go to create/join/explore rooms. */
+@Composable
+fun NewChatScreen(
+    session: MatrixSession,
+    onBack: () -> Unit,
+    onOpenRoom: (String) -> Unit,
+    onCreateRoom: () -> Unit,
+    onExplore: () -> Unit,
+) {
+    val account = remember { AccountService(session) }
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+    var query by remember { mutableStateOf("") }
+    var results by remember { mutableStateOf<List<UserProfile>>(emptyList()) }
+    var searching by remember { mutableStateOf(false) }
+    var opening by remember { mutableStateOf<String?>(null) }
+    var joinDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(query) {
+        if (query.trim().length < 2) { results = emptyList(); return@LaunchedEffect }
+        delay(350)
+        searching = true
+        results = runCatching { account.searchUsers(query.trim()) }.getOrDefault(emptyList())
+        searching = false
+    }
+
+    fun startDm(userId: String) {
+        opening = userId
+        scope.launch {
+            runCatching { account.startDm(userId) }
+                .onSuccess { onOpenRoom(it) }
+                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+            opening = null
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        topBar = { ScreenTopBar(stringResource(R.string.chats_new), onBack = onBack) },
+    ) { pad ->
+        LazyColumn(Modifier.fillMaxSize().padding(pad).imePadding()) {
+            item {
+                com.vknxworks.chatctrl.ui.components.CtrlTextField(
+                    query, { query = it },
+                    placeholder = { Text(stringResource(R.string.search_by_name_or_user_server)) },
+                    leadingIcon = { Icon(Icons.Outlined.Search, null) },
+                    trailingIcon = { if (searching) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                )
+            }
+            if (query.isBlank()) {
+                item { SettingRow(Icons.Outlined.GroupAdd, stringResource(R.string.create_a_room), stringResource(R.string.a_group_chat_for_a_team_friends_or_a), onClick = onCreateRoom) }
+                item { SettingRow(Icons.Outlined.Tag, stringResource(R.string.join_with_an_address), stringResource(R.string.room_server_or_a_room_id)) { joinDialog = true } }
+                item { SettingRow(Icons.Outlined.Explore, stringResource(R.string.explore_public_rooms), stringResource(R.string.browse_the_room_directory), onClick = onExplore) }
+                item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+                item {
+                    Text(
+                        stringResource(R.string.search_for_someone_to_start_an),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            } else {
+                items(results, key = { it.userId }) { p ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable(enabled = opening == null) { startDm(p.userId) }.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Avatar(p.displayName ?: p.userId, p.avatarUrl, p.userId, size = 44.dp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(p.displayName ?: p.userId, style = MaterialTheme.typography.bodyLarge)
+                            Text(p.userId, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if (opening == p.userId) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    }
+                }
+                if (!searching && results.isEmpty() && query.length >= 2) {
+                    item { Text(stringResource(R.string.no_one_found_try_their_full_matrix), modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
+            }
+        }
+    }
+
+    if (joinDialog) {
+        TextInputDialog(stringResource(R.string.join_a_room), label = "#room:server.org", confirm = stringResource(R.string.call_join), onDismiss = { joinDialog = false }) { address ->
+            scope.launch {
+                runCatching { account.join(address) }
+                    .onSuccess { onOpenRoom(it) }
+                    .onFailure { snackbar.showSnackbar(it.userMessage()) }
+            }
+        }
+    }
+}
+
+@Composable
+fun CreateRoomScreen(session: MatrixSession, onBack: () -> Unit, onCreated: (String) -> Unit) {
+    val account = remember { AccountService(session) }
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+    var name by remember { mutableStateOf("") }
+    var topic by remember { mutableStateOf("") }
+    var isPublic by remember { mutableStateOf(false) }
+    var encrypted by remember { mutableStateOf(true) }
+    var alias by remember { mutableStateOf("") }
+    val invites = remember { mutableStateListOf<String>() }
+    var inviteDialog by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        topBar = {
+            ScreenTopBar(
+                title = stringResource(R.string.create_room),
+                onBack = onBack,
+                actions = {
+                    TextButton(enabled = name.isNotBlank() && !busy, onClick = {
+                        busy = true
+                        scope.launch {
+                            runCatching { account.createRoom(name.trim(), topic, isPublic, encrypted, alias.trim().removePrefix("#").substringBefore(':'), invites.toList()) }
+                                .onSuccess { onCreated(it) }
+                                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                            busy = false
+                        }
+                    }) { if (busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Text(stringResource(R.string.create)) }
+                },
+            )
+        },
+    ) { pad ->
+        Column(
+            Modifier.fillMaxSize().padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            com.vknxworks.chatctrl.ui.components.CtrlTextField(name, { name = it }, label = { Text(stringResource(R.string.room_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            com.vknxworks.chatctrl.ui.components.CtrlTextField(topic, { topic = it }, label = { Text(stringResource(R.string.topic_optional)) }, modifier = Modifier.fillMaxWidth())
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.public_room), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.anyone_can_find_and_join_public), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                com.vknxworks.chatctrl.ui.components.CtrlSwitch(isPublic, { isPublic = it })
+            }
+            if (isPublic) {
+                com.vknxworks.chatctrl.ui.components.CtrlTextField(
+                    alias, { alias = it },
+                    label = { Text(stringResource(R.string.address)) },
+                    prefix = { Text("#") },
+                    suffix = { Text(":" + session.client.userIdServerName()) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.end_to_end_encryption), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.recommended_can_t_be_turned_off), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    com.vknxworks.chatctrl.ui.components.CtrlSwitch(encrypted, { encrypted = it })
+                }
+            }
+            SectionHeader(stringResource(R.string.invite_people), Modifier.padding(0.dp))
+            invites.forEach { id ->
+                InputChip(selected = false, onClick = { invites.remove(id) }, label = { Text(id, maxLines = 1, overflow = TextOverflow.Ellipsis) }, trailingIcon = { Icon(Icons.Outlined.Close, stringResource(R.string.remove), Modifier.size(16.dp)) })
+            }
+            TextButton(onClick = { inviteDialog = true }) { Text(stringResource(R.string.add_people)) }
+        }
+    }
+    if (inviteDialog) com.vknxworks.chatctrl.ui.room.InviteDialog(session, onDismiss = { inviteDialog = false }) { if (it !in invites) invites += it }
+}
+
+/**
+ * Browse and join public rooms on your server or another one. The Explore tab (with [onProfile], your profile
+ * picture at the top right) or a pushed screen with a back arrow.
+ */
+@Composable
+fun ExploreScreen(session: MatrixSession, onBack: () -> Unit, onOpenRoom: (String) -> Unit, onProfile: (() -> Unit)? = null) {
+    val search = remember { DirectorySearch(session) }
+    DisposableEffect(Unit) { onDispose { search.close() } }
+    val account = remember { AccountService(session) }
+    val results by search.results.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+    var query by remember { mutableStateOf("") }
+    var server by remember { mutableStateOf("") }
+    var joining by remember { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
+    val atEnd by remember { derivedStateOf { (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= results.size - 3 } }
+
+    LaunchedEffect(query, server) {
+        delay(400)
+        runCatching { search.query(query, server) }.onFailure { snackbar.showSnackbar(it.userMessage()) }
+    }
+    LaunchedEffect(atEnd, results.size) { if (atEnd && results.isNotEmpty()) search.more() }
+
+    val clearance = com.vknxworks.chatctrl.ui.LocalBottomClearance.current
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = if (clearance > 0.dp) androidx.compose.foundation.layout.WindowInsets.statusBars
+        else androidx.compose.material3.ScaffoldDefaults.contentWindowInsets,
+        topBar = {
+            if (onProfile != null) {
+                com.vknxworks.chatctrl.ui.TabTitle(
+                    stringResource(R.string.tab_explore), session, onProfile,
+                )
+            } else {
+                com.vknxworks.chatctrl.ui.ScreenTopBar(stringResource(R.string.tab_explore), onBack = onBack)
+            }
+        },
+    ) { pad ->
+        LazyColumn(
+            Modifier.fillMaxSize().padding(pad).imePadding(),
+            state = listState,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp + clearance),
+        ) {
+            item {
+                Column(
+                    Modifier.padding(horizontal = com.vknxworks.chatctrl.ui.Gutter, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    com.vknxworks.chatctrl.ui.components.CtrlTextField(
+                        query, { query = it },
+                        placeholder = { Text(stringResource(R.string.explore_search)) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, null) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    com.vknxworks.chatctrl.ui.components.CtrlTextField(
+                        server, { server = it },
+                        placeholder = { Text(stringResource(R.string.explore_server)) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            if (results.isEmpty() && query.isNotBlank()) {
+                item("empty") {
+                    com.vknxworks.chatctrl.ui.EmptyState(
+                        Icons.Outlined.Explore,
+                        stringResource(R.string.explore_empty),
+                        stringResource(R.string.explore_empty_body),
+                    )
+                }
+            }
+            items(results, key = { it.roomId }) { r ->
+                Row(
+                    Modifier.fillMaxWidth().clickable(enabled = joining == null) {
+                        joining = r.roomId
+                        scope.launch {
+                            val via = listOfNotNull(server.takeIf { it.isNotBlank() })
+                            runCatching { account.join(r.alias ?: r.roomId, via) }
+                                .onSuccess { onOpenRoom(it) }
+                                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                            joining = null
+                        }
+                    }.padding(horizontal = com.vknxworks.chatctrl.ui.Gutter, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Avatar(r.name ?: r.alias ?: r.roomId, r.avatarUrl, r.roomId, size = 44.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(r.name ?: r.alias ?: r.roomId, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            listOfNotNull(r.alias, stringResource(R.string.explore_members, r.joinedMembers.toInt())).joinToString(stringResource(R.string.list_separator)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        r.topic?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                    }
+                    if (joining == r.roomId) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                }
+            }
+        }
+    }
+}
