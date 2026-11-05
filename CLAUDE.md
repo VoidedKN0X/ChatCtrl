@@ -1,5 +1,9 @@
 # ChatCtrl
 
+## Dependency verification
+
+Gradle checks every library and plugin download against its SHA-256 in `gradle/verification-metadata.xml` (checksums only, no PGP). When a dependency or plugin changes, run the `verification-metadata.yml` workflow (`gh api -X POST repos/VoidedKN0X/ChatCtrl/actions/workflows/verification-metadata.yml/dispatches -f ref=main`), decode the file from its log, check the diff (only Maven Central, Google's Maven, the Gradle plugin portal and the two GitHub-hosted repos in `settings.gradle.kts` for the Rust SDK and rustls-platform-verifier) and commit it in the same push. Never turn verification off or make it lenient. The workflow and CodeQL use a placeholder for `element-call/dist`; only the build workflow builds Element Call.
+
 ## Releasing
 
 - A release is published only when `versionName` in `app/build.gradle.kts` is bumped. Bump `versionCode` by 1 at the same time.

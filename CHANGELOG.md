@@ -6,6 +6,12 @@ To publish a new version: bump `versionCode` and `versionName` in `app/build.gra
 
 ### Project
 
+- **Proof of where each APK comes from:** from the next release on, the build workflow attests every APK with GitHub's build provenance (signed through Sigstore), and the release notes end with the APK's SHA-256. `gh attestation verify ChatCtrl-vX.Y.Z.apk -R VoidedKN0X/ChatCtrl` then proves an APK was built by this repo's workflow from the tagged commit.
+- **Workflow audit:** a new zizmor workflow checks the GitHub Actions workflows for security problems whenever they change. zizmor itself is installed pinned to one version with its SHA-256.
+- **Least privilege in CI:** every workflow now starts with no permissions, and each job asks only for what it needs. Only the release job can write, and it alone gets the permissions to sign the build provenance.
+- **CodeQL:** a new workflow scans the app's code for security problems every week and when the app changes. Results go to the repo's Security tab; it never blocks a release.
+- **Corepack checked before it's installed:** the Element Call build job now downloads Corepack and checks it against the npm registry's SHA-512 before installing it, instead of installing it by version only.
+- **Dependency verification:** a new workflow writes `gradle/verification-metadata.xml`, the SHA-256 of every library and Gradle plugin the build downloads, so the build can refuse anything that doesn't match. CLAUDE.md explains how to update it when a dependency changes.
 - **The build that signs ChatCtrl no longer runs third-party install scripts.** Building the call screen (Element Call) installs its JavaScript dependencies with pnpm, which runs those packages' own install scripts. That used to happen in the same build step as signing the app, so a bad package could in theory have reached ChatCtrl's signing key. Element Call is now built in a separate job that only has read access to the code and no secrets; only the finished Element Call files are handed to the job that builds and signs the APK. The app and its call screen are unchanged, so there's no new version.
 
 ## 2.0.2
