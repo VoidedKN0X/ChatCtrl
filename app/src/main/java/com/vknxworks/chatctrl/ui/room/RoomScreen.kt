@@ -724,7 +724,7 @@ fun RoomScreen(
                 else -> null
             }
             copyable?.takeIf { it.isNotBlank() }?.let { text ->
-                SettingRow(Icons.Outlined.ContentCopy, stringResource(R.string.copy_text)) { copyText(context, Strings.str(R.string.message), text); sheetFor = null }
+                SettingRow(Icons.Outlined.ContentCopy, stringResource(R.string.copy_text)) { copyText(context, Strings.str(R.string.message), text, sensitive = true); sheetFor = null }
             }
             if (item.content is UiContent.Image || item.content is UiContent.Video || item.content is UiContent.File || item.content is UiContent.Audio) {
                 SettingRow(Icons.Outlined.Download, stringResource(R.string.save_to_downloads)) {
@@ -835,7 +835,7 @@ fun RoomScreen(
                     modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
                 )
             },
-            confirmButton = { TextButton(onClick = { copyText(context, Strings.str(R.string.event_source), json); source = null }) { Text(stringResource(R.string.copy)) } },
+            confirmButton = { TextButton(onClick = { copyText(context, Strings.str(R.string.event_source), json, sensitive = true); source = null }) { Text(stringResource(R.string.copy)) } },
             dismissButton = { TextButton(onClick = { source = null }) { Text(stringResource(R.string.lock_close)) } },
         )
     }

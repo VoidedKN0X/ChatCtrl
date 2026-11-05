@@ -409,7 +409,7 @@ fun LocationViewerDialog(title: String, geoUri: String, onDismiss: () -> Unit) {
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(spot.display(), style = CtrlType.Meta, color = CtrlColors.Text, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        TextButton(onClick = { copyText(context, Strings.str(R.string.location_3), spot.display()) }) {
+                        TextButton(onClick = { copyText(context, Strings.str(R.string.location_3), spot.display(), sensitive = true) }) {
                             Icon(Icons.Outlined.ContentCopy, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(stringResource(R.string.copy))

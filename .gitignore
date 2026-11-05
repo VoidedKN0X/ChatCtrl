@@ -9,3 +9,7 @@ captures/
 .DS_Store
 element-call/.work/
 element-call/dist/
+*.jks.b64
+*.p12
+keystore.properties
+google-services.json

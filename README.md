@@ -41,7 +41,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 
 ## Install
 
-1. Open the [latest release](https://github.com/VoidedKN0X/ChatCtrl/releases/latest) on your phone, scroll down to **Assets** and tap the file that ends in `.apk` (for example `ChatCtrl-v2.0.0.apk`). The "Source code" zip and tar.gz files are not the app.
+1. Open the [latest release](https://github.com/VoidedKN0X/ChatCtrl/releases/latest) on your phone, scroll down to **Assets** and tap the file that ends in `.apk` (for example `ChatCtrl-v2.0.1.apk`). The "Source code" zip and tar.gz files are not the app.
 2. Open it on your phone. Android may ask you to allow installing apps from your browser or file manager.
 3. Updates install over the old version. Your settings and login are kept.
 
@@ -92,6 +92,9 @@ Your account, devices, security and recovery, **Settings**, **Sign out** and **A
 | Own calls (`MANAGE_OWN_CALLS`) | Lets the ongoing call run as a "phone call" service; no access to your phone app or calls |
 | Full-screen notifications (`USE_FULL_SCREEN_INTENT`) | The full-screen ringing screen for incoming calls |
 | Location (`ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`) | **Send my current location** in a chat, read once when you ask; never in the background |
+| Run at startup (`RECEIVE_BOOT_COMPLETED`) | Putting the 15-minute background check for new messages back on schedule after the phone restarts. Added by Android's background work library (WorkManager) |
+
+`DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` also shows up in the app's details: it's an internal permission Android adds to every app built for Android 13 and newer, and only keeps ChatCtrl's own broadcasts private. ChatCtrl has no contacts, phone, SMS or storage permission: files and photos you send are picked with Android's own picker.
 
 See [Privacy](#privacy) for everything ChatCtrl connects to.
 
@@ -168,12 +171,16 @@ Password sign-in, the recovery key screens and the lock and PIN screens are alwa
 
 ## Privacy
 
-**Telemetry-free.** ChatCtrl has no analytics, crash reporting, usage stats or tracking of any kind. It only talks to your homeserver (and its sign-in page, if your server signs in through the browser), if you turn on push, your ntfy server, during calls, your server's call service, and while a location map is open, OpenStreetMap's map tile server (tile.openstreetmap.org, which only sees which map squares are loaded).
+**Telemetry-free and Google-free.** ChatCtrl has no analytics, crash reporting, usage stats, ads or tracking of any kind, and no Google libraries or services. It only talks to your homeserver (and its sign-in page, if your server signs in through the browser), if you turn on push, your ntfy server, during calls, your server's call service, and while a location map is open, OpenStreetMap's map tile server (tile.openstreetmap.org, which only sees which map squares are loaded).
 
 - **Push:** when you turn it on, ChatCtrl asks your ntfy server whether its Matrix gateway is there. Pushes then reach the phone through ntfy (see *What a push contains* above).
 - **Link previews** are fetched by your homeserver, never by the phone.
 - **Calls** connect only to your homeserver (and its domain), the MatrixRTC Authorization Service your homeserver announces, the LiveKit SFU it points to, and the TURN/STUN servers that SFU hands out. The bundled Element Call is built from source without its analytics (PostHog), crash reporting (Sentry), bug-report upload, Google reCAPTCHA and Google MediaPipe code, its fallback call servers are switched off, and the call WebView refuses every other web address. The WebView doesn't ask Google Safe Browsing about pages and sends no usage metrics.
 - **The Matrix SDK's crash reporting is switched off**, and release builds don't write the SDK's logs anywhere.
+- **Maps** only ever use OpenStreetMap's standard tiles. The map library has other map providers built in (such as Mapbox, Thunderforest and Bing), but ChatCtrl never selects them, so they're never contacted. The map only loads when you open **Send location** or tap a location in a chat.
+- **Addresses that are never contacted:** the bundled Element Call contains links to element.io and other sites, but the call WebView refuses every address except the ones listed above. `matrix.gateway.unifiedpush.org` is only used to recognise and remove a push registration made by an older ChatCtrl version; the phone never connects to it.
+- **Copying** a message, a location or a recovery key marks it as sensitive, so Android hides it from the clipboard preview and keyboards don't keep it in their clipboard history.
+- **Links:** **Install ntfy** (f-droid.org), the GitHub and licence links in About, and links in messages open in your browser only when you tap them.
 
 ## How ChatCtrl is made
 
@@ -233,21 +240,29 @@ Native Android apps for self-hosted services and everyday tools, all with the sa
 | [AdCtrl](https://github.com/VoidedKN0X/AdCtrl) | Control your AdGuard Home DNS server |
 | [ArrCtrl](https://github.com/VoidedKN0X/ArrCtrl) | Radarr, Sonarr, Prowlarr, Bazarr, qBittorrent, autobrr and Cleanuparr in one app |
 | [BeamCtrl](https://github.com/VoidedKN0X/BeamCtrl) | TV remote for phones with an IR blaster |
+| [CallCtrl](https://github.com/VoidedKN0X/CallCtrl) | Phone app: dialer, call history and in-call screen |
 | **ChatCtrl** (this app) | Matrix chat client for matrix.org and self-hosted Synapse |
+| [ClockCtrl](https://github.com/VoidedKN0X/ClockCtrl) | Alarms, timers, stopwatch and world clock |
+| [ContactCtrl](https://github.com/VoidedKN0X/ContactCtrl) | Contacts: browse, edit, import and export |
 | [CraftyCtrl](https://github.com/VoidedKN0X/CraftyCtrl) | Manage Minecraft servers on Crafty Controller |
+| [DateCtrl](https://github.com/VoidedKN0X/DateCtrl) | Calendar for the calendars on your phone and your accounts |
 | [FilesCtrl](https://github.com/VoidedKN0X/FilesCtrl) | File manager with NFS, SMB, SFTP, FTP and WebDAV |
 | [FrigateCtrl](https://github.com/VoidedKN0X/FrigateCtrl) | Watch and review your Frigate NVR cameras |
 | [ImmichCtrl](https://github.com/VoidedKN0X/ImmichCtrl) | Photos and backup for your Immich server |
 | [JellyCtrl](https://github.com/VoidedKN0X/JellyCtrl) | Movies, shows, music and Live TV from Jellyfin |
+| [LijnCtrl](https://github.com/VoidedKN0X/LijnCtrl) | Live De Lijn bus and tram departures |
+| [MailCtrl](https://github.com/VoidedKN0X/MailCtrl) | Email for Gmail and Proton Mail |
 | [MemoCtrl](https://github.com/VoidedKN0X/MemoCtrl) | Notes on your Memos server |
 | [NaviCtrl](https://github.com/VoidedKN0X/NaviCtrl) | Music player for Navidrome servers |
 | [PaperCtrl](https://github.com/VoidedKN0X/PaperCtrl) | Scan and browse documents on Paperless-ngx |
 | [PrintCtrl](https://github.com/VoidedKN0X/PrintCtrl) | Bambu Lab printers through Bambuddy, and Spoolman spools |
 | [ProxCtrl](https://github.com/VoidedKN0X/ProxCtrl) | Manage your Proxmox VE server |
+| [RecorderCtrl](https://github.com/VoidedKN0X/RecorderCtrl) | Private, offline voice recorder |
 | [RideCtrl](https://github.com/VoidedKN0X/RideCtrl) | Offline maintenance, fuel and mod log for your vehicles |
 | [SeerrCtrl](https://github.com/VoidedKN0X/SeerrCtrl) | Request movies and shows on Seerr / Jellyseerr |
 | [SumCtrl](https://github.com/VoidedKN0X/SumCtrl) | Offline calculator, unit converter and work tools |
 | [SynapseCtrl](https://github.com/VoidedKN0X/SynapseCtrl) | Administer your Matrix Synapse server |
+| [TextCtrl](https://github.com/VoidedKN0X/TextCtrl) | Private SMS and MMS messaging |
 | [TrueCtrl](https://github.com/VoidedKN0X/TrueCtrl) | Monitor and manage your TrueNAS server |
 | [WrtCtrl](https://github.com/VoidedKN0X/WrtCtrl) | Manage your OpenWrt router |
 

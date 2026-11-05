@@ -2,6 +2,21 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## 2.0.1
+
+A privacy and security check-up.
+
+### Privacy
+
+- **Copied messages stay out of clipboard previews**: copying a message's text, its event source or a location now marks the copy as sensitive, as copying the recovery key already did. Android hides it from the clipboard preview, and keyboards don't keep it in their clipboard history. Pasting works as before.
+- **One fewer component other apps can reach**: Android's background work library came with a diagnostics receiver for debugging over a USB cable. ChatCtrl never uses it, so it's gone.
+
+### Project
+
+- README: the permissions table now also lists the startup permission Android's background work library adds (to keep the 15-minute check for new messages scheduled after a restart) and explains the internal permission Android adds to every app. The Privacy section says ChatCtrl is Google-free and explains the addresses that are never contacted: the other map providers built into the map library, the links inside Element Call and the old public push gateway.
+- README: the Ctrl series list now shows all 28 apps, with CallCtrl, ClockCtrl, ContactCtrl, DateCtrl, LijnCtrl, MailCtrl, RecorderCtrl and TextCtrl added.
+- The build now checks that the Gradle wrapper is an official Gradle release, that no Google Play services, Firebase, ML Kit, Play Core or Tink library ends up in the app, and that the APK is signed with ChatCtrl's own release key (not just any non-debug key) before it's published. `.gitignore` also keeps more signing files and `google-services.json` out of the repo.
+
 ## Project updates (2026-11-03)
 
 ### Project

@@ -159,6 +159,11 @@
                 <action android:name="org.unifiedpush.android.connector.RAISE_TO_FOREGROUND" />
             </intent-filter>
         </service>
+        <!-- WorkManager's diagnostics receiver (debug dumps over adb) isn't needed; leave it out, so ChatCtrl exposes
+             nothing it doesn't use. -->
+        <receiver
+            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+            tools:node="remove" />
         <!-- Don't let androidx.emoji2 look up a downloadable emoji font at start-up: emoji are drawn with the
              phone's own emoji font, and nothing is fetched. -->
         <provider

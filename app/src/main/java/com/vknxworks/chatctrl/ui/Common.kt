@@ -137,7 +137,7 @@ fun openUrl(context: Context, url: String) {
 }
 
 /**
- * Copies text to the clipboard. With [sensitive] (recovery keys and other secrets) the clip is flagged so Android
+ * Copies text to the clipboard. With [sensitive] (recovery keys, message text, locations) the clip is flagged so Android
  * hides it from the clipboard preview and keyboards don't keep it in their clipboard history.
  */
 fun copyText(context: Context, label: String, text: String, sensitive: Boolean = false) {
