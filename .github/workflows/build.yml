@@ -37,35 +37,20 @@ jobs:
         id: v
         run: bash .github/scripts/check-version.sh
 
-  build:
-    needs: version
+  # The call screen: Element Call, built from source at the commit pinned in element-call/upstream.env, with
+  # ChatCtrl's patches (no Google reCAPTCHA or MediaPipe, no analytics, crash reporting or bug-report upload).
+  # Its build runs pnpm install, which runs the dependencies' install scripts, so it gets its own job with
+  # read-only access and no secrets; only its output (element-call/dist) is handed to the signing job.
+  # If this fails, the APK isn't built and nothing is released.
+  element-call:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    outputs:
-      tag: ${{ steps.name.outputs.tag }}
-      version: ${{ steps.name.outputs.version }}
-      apk: ${{ steps.name.outputs.apk }}
-      signed: ${{ steps.name.outputs.signed }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
-      # The Gradle wrapper jar in the repo must be an official Gradle release.
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
-
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
-
-      # The call screen: Element Call, built from source at the commit pinned in element-call/upstream.env, with
-      # ChatCtrl's patches (no Google reCAPTCHA or MediaPipe, no analytics, crash reporting or bug-report upload).
-      # If this fails, the APK isn't built and nothing is released.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24.11.1
@@ -96,6 +81,47 @@ jobs:
             done
             exit 1
           fi
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: element-call-dist
+          path: element-call/dist
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  build:
+    needs: [version, element-call]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.name.outputs.tag }}
+      version: ${{ steps.name.outputs.version }}
+      apk: ${{ steps.name.outputs.apk }}
+      signed: ${{ steps.name.outputs.signed }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      # The Gradle wrapper jar in the repo must be an official Gradle release.
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      # Element Call, built in its own job without any secrets (see the element-call job above).
+      - name: Get the Element Call build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: element-call-dist
+          path: element-call/dist
 
       - name: Decode signing key
         env:

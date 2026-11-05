@@ -2,6 +2,12 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Project updates (2026-11-05)
+
+### Project
+
+- **The build that signs ChatCtrl no longer runs third-party install scripts.** Building the call screen (Element Call) installs its JavaScript dependencies with pnpm, which runs those packages' own install scripts. That used to happen in the same build step as signing the app, so a bad package could in theory have reached ChatCtrl's signing key. Element Call is now built in a separate job that only has read access to the code and no secrets; only the finished Element Call files are handed to the job that builds and signs the APK. The app and its call screen are unchanged, so there's no new version.
+
 ## 2.0.2
 
 Three security fixes: a second plain-HTTP warning when your server points elsewhere, only ChatCtrl's own notifications can open a chat, and one fewer component other apps can reach.
