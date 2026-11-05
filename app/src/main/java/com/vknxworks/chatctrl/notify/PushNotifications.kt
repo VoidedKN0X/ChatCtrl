@@ -11,7 +11,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import com.vknxworks.chatctrl.ChatCtrlApp
-import com.vknxworks.chatctrl.MainActivity
 import com.vknxworks.chatctrl.R
 import com.vknxworks.chatctrl.matrix.isOneToOne
 import com.vknxworks.chatctrl.matrix.previewText
@@ -163,7 +162,7 @@ object PushNotifications {
 
     private fun openIntent(context: Context, roomId: String) = PendingIntent.getActivity(
         context, roomId.hashCode(),
-        Intent(context, MainActivity::class.java).putExtra(Notifier.EXTRA_ROOM_ID, roomId).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+        Notifier.openRoomIntent(context, roomId).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 

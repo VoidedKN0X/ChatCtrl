@@ -19,9 +19,8 @@ object AppRestart {
     const val PROCESS_SUFFIX = ":restart"
 
     fun restart(context: Context, roomId: String? = null) {
-        val next = Intent(context, MainActivity::class.java)
+        val next = (if (roomId != null) Notifier.openRoomIntent(context, roomId) else Intent(context, MainActivity::class.java))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        if (roomId != null) next.putExtra(Notifier.EXTRA_ROOM_ID, roomId)
         context.startActivity(
             Intent(context, RestartActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

@@ -95,9 +95,11 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         intent ?: return
+        // Only ChatCtrl's own notifications may open a room; from any other app the extra is ignored.
         intent.getStringExtra(Notifier.EXTRA_ROOM_ID)?.let {
-            DeepLinks.openRoom.value = it
+            if (Notifier.isOwnLink(this, intent)) DeepLinks.openRoom.value = it
             intent.removeExtra(Notifier.EXTRA_ROOM_ID)
+            intent.removeExtra(Notifier.EXTRA_LINK_SECRET)
             return
         }
         when (intent.action) {

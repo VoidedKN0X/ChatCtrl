@@ -2,6 +2,16 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## 2.0.2
+
+Three security fixes: a second plain-HTTP warning when your server points elsewhere, only ChatCtrl's own notifications can open a chat, and one fewer component other apps can reach.
+
+### Security
+
+- **A plain-HTTP warning for every server, not just the one you typed.** When you entered an `http://` address and accepted the "Not encrypted" warning, and that server's `.well-known` file then pointed to a different server that also uses plain HTTP, ChatCtrl went straight on to that other server without asking. It now shows the warning again, naming both addresses, so you decide about the server your password will actually go to. An `http://` server that points to itself (or to its own https address) connects as before, with a single warning.
+- **Only ChatCtrl's own notifications can open a chat.** Tapping a message, invite or missed-call notification opens that chat. Before, any other app on the phone could ask ChatCtrl to open a chat the same way. ChatCtrl's notifications now carry a secret made once on your phone, and a request to open a chat without it is ignored (ChatCtrl just opens as usual). Notifications, `matrix:` and matrix.to links, sharing to ChatCtrl and returning to a chat after **Restart app** work as before.
+- **One fewer component other apps can reach.** A small component from Android's build tools let any app tell ChatCtrl to write or skip its start-up speed profile. ChatCtrl doesn't need it, so it's gone; the app starts just as fast.
+
 ## 2.0.1
 
 A privacy and security check-up.

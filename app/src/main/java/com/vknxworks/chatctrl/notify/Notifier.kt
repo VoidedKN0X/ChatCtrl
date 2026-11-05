@@ -39,7 +39,41 @@ object Notifier {
     const val CHANNEL_MESSAGES = "messages"
     const val CHANNEL_INVITES = "invites"
     const val EXTRA_ROOM_ID = "room_id"
+    const val EXTRA_LINK_SECRET = "link_secret"
     private const val WORK = "background-sync"
+    private const val LINK_PREFS = "notify_links"
+    private const val K_LINK_SECRET = "link_secret"
+
+    @Volatile private var linkSecret: String? = null
+
+    /**
+     * A random secret made once per install. MainActivity is exported (it's the launcher), so "open this room"
+     * is only accepted from intents that carry it, which only ChatCtrl's own notifications (and its own restart)
+     * do.
+     */
+    @Synchronized
+    private fun linkSecret(context: Context): String {
+        linkSecret?.let { return it }
+        val prefs = context.applicationContext.getSharedPreferences(LINK_PREFS, Context.MODE_PRIVATE)
+        val secret = prefs.getString(K_LINK_SECRET, null)?.takeIf { it.length >= 32 } ?: run {
+            val bytes = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+            bytes.joinToString("") { "%02x".format(it) }.also { prefs.edit().putString(K_LINK_SECRET, it).commit() }
+        }
+        linkSecret = secret
+        return secret
+    }
+
+    /** An intent that opens [roomId] in MainActivity, with the secret that proves it's ours. */
+    fun openRoomIntent(context: Context, roomId: String): Intent =
+        Intent(context, MainActivity::class.java)
+            .putExtra(EXTRA_ROOM_ID, roomId)
+            .putExtra(EXTRA_LINK_SECRET, linkSecret(context))
+
+    /** Whether [intent] carries the secret ChatCtrl puts on its own "open this room" intents. */
+    fun isOwnLink(context: Context, intent: Intent): Boolean {
+        val secret = intent.getStringExtra(EXTRA_LINK_SECRET)
+        return !secret.isNullOrEmpty() && java.security.MessageDigest.isEqual(secret.toByteArray(), linkSecret(context).toByteArray())
+    }
 
     fun createChannels(context: Context) {
         val nm = context.getSystemService(NotificationManager::class.java)
@@ -101,7 +135,7 @@ object Notifier {
     private fun post(context: Context, r: RoomSummary) {
         val open = PendingIntent.getActivity(
             context, r.roomId.hashCode(),
-            Intent(context, MainActivity::class.java).putExtra(EXTRA_ROOM_ID, r.roomId).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            openRoomIntent(context, r.roomId).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val builder = NotificationCompat.Builder(context, if (r.isInvite) CHANNEL_INVITES else CHANNEL_MESSAGES)

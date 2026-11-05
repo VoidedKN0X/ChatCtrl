@@ -16,7 +16,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import com.vknxworks.chatctrl.ChatCtrlApp
-import com.vknxworks.chatctrl.MainActivity
 import com.vknxworks.chatctrl.R
 import com.vknxworks.chatctrl.matrix.MatrixSession
 import com.vknxworks.chatctrl.notify.NotificationAvatars
@@ -139,7 +138,7 @@ object CallNotifications {
         val show = showContent()
         val open = PendingIntent.getActivity(
             context, call.roomId.hashCode() + 7,
-            Intent(context, MainActivity::class.java).putExtra(Notifier.EXTRA_ROOM_ID, call.roomId).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            Notifier.openRoomIntent(context, call.roomId).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val text = context.getString(if (call.audioOnly) R.string.call_missed_voice else R.string.call_missed_video)

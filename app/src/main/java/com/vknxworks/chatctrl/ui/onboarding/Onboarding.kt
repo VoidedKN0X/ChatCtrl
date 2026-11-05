@@ -89,6 +89,13 @@ import com.vknxworks.chatctrl.Strings
 import com.vknxworks.chatctrl.R
 import com.vknxworks.chatctrl.ui.ScreenTopBar
 
+/** Whether [a] and [b] name the same host (scheme and port aside); false when either can't be read. */
+private fun sameHost(a: String, b: String): Boolean {
+    val ha = android.net.Uri.parse(a.trim()).host
+    val hb = android.net.Uri.parse(b.trim()).host
+    return !ha.isNullOrEmpty() && ha.equals(hb, ignoreCase = true)
+}
+
 /** First start: pick a homeserver, then sign in to it. */
 @Composable
 fun OnboardingFlow(signedOutMessage: String?) {
@@ -129,8 +136,10 @@ fun ServerPickerScreen(message: String?, onServerReady: (ServerDetails) -> Unit,
         scope.launch {
             runCatching { graph.auth.discover(target) }
                 .onSuccess { details ->
-                    if (!httpConfirmed && isCleartext(details.url)) {
-                        // .well-known pointed a bare server name at plain http: never downgrade silently.
+                    // The http warning was only accepted for the address typed in; plain http to another host
+                    // (where .well-known points) needs its own yes.
+                    if (isCleartext(details.url) && (!httpConfirmed || !sameHost(details.url, target))) {
+                        // .well-known pointed the server name at plain http: never downgrade silently.
                         insecureDetails = details
                     } else {
                         if (Servers.standard.none { it.address.equals(target, true) }) graph.prefs.rememberCustomServer(target)
