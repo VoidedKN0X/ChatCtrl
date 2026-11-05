@@ -27,6 +27,7 @@ import com.vknxworks.chatctrl.ui.ChatCtrlTheme
 import com.vknxworks.chatctrl.ui.MainNav
 import com.vknxworks.chatctrl.ui.SharedContent
 import com.vknxworks.chatctrl.ui.isForeignContentUri
+import com.vknxworks.chatctrl.ui.shield
 import com.vknxworks.chatctrl.ui.onboarding.OnboardingFlow
 import org.matrix.rustcomponents.sdk.MatrixId
 import org.matrix.rustcomponents.sdk.parseMatrixEntityFrom
@@ -55,6 +56,13 @@ class MainActivity : ComponentActivity() {
                 // "Hide in recent apps" (off by default). With the app lock on, Recents always shows a blank
                 // card: a preview there would show your chats without the PIN.
                 WindowPrivacy(this@MainActivity, secure, hideRecents = lock.hideRecents || legacyLock || graph.vault.enabled)
+                // The lock and PIN screens and screens holding secrets: no other app's floating window over them, and their
+                // content hidden from apps misusing accessibility. Lifted again when they close, so overlays keep working
+                // in the rest of the app.
+                val shielded = locked || AppLock.request != null || com.vknxworks.chatctrl.ui.ScreenPrivacy.forced > 0
+                LaunchedEffect(shielded) {
+                    if (!isFinishing && !isDestroyed) window.shield(shielded)
+                }
                 Box(Modifier.fillMaxSize()) {
                     Surface(Modifier.fillMaxSize(), color = androidx.compose.material3.MaterialTheme.colorScheme.background) {
                         val state by graph.state.collectAsStateWithLifecycle()

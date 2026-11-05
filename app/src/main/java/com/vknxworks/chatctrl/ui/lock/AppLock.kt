@@ -451,6 +451,7 @@ private fun LegacyPinScreen() {
     if (forgetting) {
         CtrlDialog(
             onDismissRequest = { forgetting = false },
+            shielded = true,
             title = { Text(stringResource(R.string.lock_forgot_title)) },
             text = { Text(stringResource(R.string.lock_forgot_body)) },
             confirmButton = {
@@ -607,6 +608,7 @@ private fun PinLockScreen() {
     if (forgetting) {
         CtrlDialog(
             onDismissRequest = { forgetting = false },
+            shielded = true,
             title = { Text(stringResource(R.string.lock_forgot_title)) },
             text = { Text(stringResource(R.string.lock_forgot_body)) },
             confirmButton = {

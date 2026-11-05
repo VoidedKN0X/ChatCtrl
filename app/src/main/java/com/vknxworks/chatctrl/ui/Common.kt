@@ -251,6 +251,7 @@ fun ConfirmDialog(
 ) {
     com.vknxworks.chatctrl.ui.components.CtrlDialog(
         onDismissRequest = onDismiss,
+        shielded = destructive,
         title = { Text(title) },
         text = { Text(text) },
         confirmButton = {
@@ -388,4 +389,34 @@ fun WindowPrivacy(activity: android.app.Activity, secure: Boolean, hideRecents: 
         else activity.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
     }
     androidx.compose.runtime.LaunchedEffect(hideRecents) { activity.setRecentsScreenshotEnabled(!hideRecents) }
+}
+
+// ---------- Window shield ----------
+
+/**
+ * Shields a window while a PIN, lock, secret or confirmation screen shows on it: other apps' floating windows
+ * (overlays such as chat heads) are hidden over it, so they can't cover or imitate it, and on Android 14+ its
+ * content is hidden from apps that misuse accessibility access. Real accessibility tools such as TalkBack keep
+ * working. [on] = false lifts it again, so overlays keep working everywhere else in the app.
+ */
+fun android.view.Window.shield(on: Boolean) {
+    runCatching { setHideOverlayWindows(on) }
+    if (android.os.Build.VERSION.SDK_INT >= 34) {
+        runCatching {
+            decorView.setAccessibilityDataSensitive(
+                if (on) android.view.View.ACCESSIBILITY_DATA_SENSITIVE_YES else android.view.View.ACCESSIBILITY_DATA_SENSITIVE_AUTO,
+            )
+        }
+    }
+}
+
+/** Shields the dialog it's called from (a destructive or security confirmation) for as long as it shows. */
+@Composable
+fun ShieldDialogWindow() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.DisposableEffect(view) {
+        val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+        window?.shield(true)
+        onDispose { window?.shield(false) }
+    }
 }

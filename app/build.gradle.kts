@@ -6,15 +6,15 @@ plugins {
 
 android {
     namespace = "com.vknxworks.chatctrl"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.vknxworks.chatctrl"
         minSdk = 33
-        targetSdk = 35
+        targetSdk = 36
         // Bump both to publish a new release (see CHANGELOG.md).
-        versionCode = 64
-        versionName = "2.0.2"
+        versionCode = 65
+        versionName = "2.0.3"
 
         // The Rust SDK ships a native library per CPU type (~60 MB each). Phones running Android 13+
         // are 64-bit ARM, so only that one is packaged; add "x86_64" here to run on an emulator.

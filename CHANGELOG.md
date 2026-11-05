@@ -2,6 +2,26 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v2.0.3 (2026-11-05)
+
+More protection for the PIN screen, your recovery key and confirmations, built for Android 16, and a way to check that a download really comes from this repo. Nothing works differently in day-to-day use.
+
+### Security
+
+- **No floating windows over the PIN screen:** while the lock screen, a PIN screen, the recovery-key, sign-in or device-linking screens, "Forgot PIN?", a dialog showing your recovery key or a confirmation such as leaving a room or signing out is open, other apps' floating windows (chat heads, overlays) are hidden, so they can't cover or imitate it. They come back as soon as it closes and keep working everywhere else in ChatCtrl, including during calls. This uses Android's "hide overlay windows" permission, which is granted at install without a prompt.
+- **PIN and secret screens hidden from accessibility misuse (Android 14+):** the same screens are hidden from apps that use accessibility access to read the screen. Real accessibility tools such as TalkBack keep working.
+- **Shared files must belong to the sender (Android 15+):** when another app shares a picture or file into ChatCtrl, Android now checks that the app is allowed to read that file itself, so no app can use ChatCtrl to reach a file it has no access to. Sharing from your gallery, file manager and other apps works as before.
+- **Stricter about other apps' requests (Android 16+):** ChatCtrl now only accepts requests from other apps that match what it declares, such as the launcher, matrix.to and `matrix:` links, the sign-in page returning to the app, shares, and ntfy.
+- **Every library checked:** the build now refuses any library or build plugin whose SHA-256 doesn't match the one recorded in the repo.
+
+### Changed
+
+- **Built for Android 16:** ChatCtrl now targets Android 16 (API 36). The back gesture, edge-to-edge screens and calls work as before.
+
+### Project
+
+- **Check a download:** this is the first release with GitHub build provenance. The release notes end with the APK's SHA-256, and `gh attestation verify ChatCtrl-v2.0.3.apk -R VoidedKN0X/ChatCtrl` proves the APK was built by this repo's workflow from the tagged commit. The README explains both, next to the signing-certificate fingerprint.
+
 ## Project updates (2026-11-05)
 
 ### Project

@@ -73,6 +73,7 @@ import com.vknxworks.chatctrl.ui.WindowPrivacy
 import com.vknxworks.chatctrl.ui.lock.AppLock
 import com.vknxworks.chatctrl.ui.lock.AppLockOverlay
 import com.vknxworks.chatctrl.ui.openUrl
+import com.vknxworks.chatctrl.ui.shield
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -230,6 +231,12 @@ class CallActivity : ComponentActivity() {
                     // With the app lock on, the call never shows in Recents.
                     hideRecents = lock.hideRecents || legacyLock || graph.vault.enabled,
                 )
+                // The lock and PIN screens over the call screen: no other app's floating window over them, and their content
+                // hidden from apps misusing accessibility. Never during the call itself.
+                val shielded = locked || AppLock.request != null
+                LaunchedEffect(shielded) {
+                    if (!isFinishing && !isDestroyed) window.shield(shielded)
+                }
                 // Start the call once the app is unlocked.
                 LaunchedEffect(pendingJoin, locked) {
                     val target = pendingJoin
