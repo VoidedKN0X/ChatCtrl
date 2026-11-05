@@ -30,8 +30,7 @@ fun CallSettingsGroup(session: MatrixSession) {
     var support by remember { mutableStateOf<CallSupport.Result?>(null) }
     LaunchedEffect(session) { support = CallSupport.check(session) }
     val fullScreen = remember {
-        android.os.Build.VERSION.SDK_INT < 34 ||
-            context.getSystemService(NotificationManager::class.java).canUseFullScreenIntent()
+        context.getSystemService(NotificationManager::class.java).canUseFullScreenIntent()
     }
     Group(stringResource(R.string.group_calls), footer = stringResource(R.string.calls_footer)) {
         GroupRow(

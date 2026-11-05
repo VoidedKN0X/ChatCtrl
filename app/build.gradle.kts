@@ -10,13 +10,13 @@ android {
 
     defaultConfig {
         applicationId = "com.vknxworks.chatctrl"
-        minSdk = 33
+        minSdk = 35
         targetSdk = 36
         // Bump both to publish a new release (see CHANGELOG.md).
-        versionCode = 66
-        versionName = "2.0.4"
+        versionCode = 67
+        versionName = "2.0.5"
 
-        // The Rust SDK ships a native library per CPU type (~60 MB each). Phones running Android 13+
+        // The Rust SDK ships a native library per CPU type (~60 MB each). Phones running Android 15+
         // are 64-bit ARM, so only that one is packaged; add "x86_64" here to run on an emulator.
         ndk { abiFilters += listOf("arm64-v8a") }
     }

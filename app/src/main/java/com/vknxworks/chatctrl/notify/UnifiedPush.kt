@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import java.security.KeyStore
 import java.util.UUID
 
@@ -107,11 +106,7 @@ object UnifiedPush {
         val pi = PendingIntent.getBroadcast(context, 0, Intent("org.unifiedpush.dummy_app"), PendingIntent.FLAG_IMMUTABLE)
         intent.putExtra("pi", pi)
         runCatching {
-            if (Build.VERSION.SDK_INT >= 34) {
-                context.sendBroadcast(intent, null, BroadcastOptions.makeBasic().setShareIdentityEnabled(true).toBundle())
-            } else {
-                context.sendBroadcast(intent)
-            }
+            context.sendBroadcast(intent, null, BroadcastOptions.makeBasic().setShareIdentityEnabled(true).toBundle())
         }
     }
 

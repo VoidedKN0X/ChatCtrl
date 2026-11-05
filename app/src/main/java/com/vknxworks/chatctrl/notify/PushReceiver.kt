@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import com.vknxworks.chatctrl.ChatCtrlApp
@@ -24,10 +23,8 @@ class PushReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val token = intent.getStringExtra(UnifiedPush.EXTRA_TOKEN) ?: return
         if (token != UnifiedPush.token(context)) return
-        if (Build.VERSION.SDK_INT >= 34) {
-            val sender = sentFromPackage
-            if (sender != null && sender != UnifiedPush.NTFY) return
-        }
+        val sender = sentFromPackage
+        if (sender != null && sender != UnifiedPush.NTFY) return
         // Keep the CPU awake while the message is saved and the fetch job is handed to Android.
         val wakeLock = context.getSystemService(PowerManager::class.java)
             ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ChatCtrl:push")

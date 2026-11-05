@@ -2,7 +2,7 @@
 
 **A Matrix chat app for matrix.org and your own server.**
 
-[![Latest release](https://img.shields.io/github/v/release/VoidedKN0X/ChatCtrl?label=download)](https://github.com/VoidedKN0X/ChatCtrl/releases/latest) ![Android 13+](https://img.shields.io/badge/Android-13%2B-3DDC84?logo=android&logoColor=white) [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![Telemetry-free](https://img.shields.io/badge/telemetry-none-brightgreen) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/VoidedKN0X)
+[![Latest release](https://img.shields.io/github/v/release/VoidedKN0X/ChatCtrl?label=download)](https://github.com/VoidedKN0X/ChatCtrl/releases/latest) ![Android 15+](https://img.shields.io/badge/Android-15%2B-3DDC84?logo=android&logoColor=white) [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![Telemetry-free](https://img.shields.io/badge/telemetry-none-brightgreen) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/VoidedKN0X)
 
 ChatCtrl is a Matrix chat client in the spirit of Element X. It works with matrix.org, other public servers and your own self-hosted Synapse, and is built on the same Matrix Rust SDK as Element X, so encryption and verification work the same way.
 
@@ -35,7 +35,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 
 ## Requirements
 
-- Android 13 or newer on a 64-bit ARM phone
+- Android 15 or newer on a 64-bit ARM phone
 - A Matrix server with **Simplified Sliding Sync** (Synapse 1.114 or newer, Conduit, Conduwuit or Tuwunel)
 - **Google-free and de-Googled:** no Google Play services, Firebase or other Google services, and the app never contacts Google. It works the same on de-Googled phones (GrapheneOS, CalyxOS, /e/OS, LineageOS without Google apps).
 
@@ -114,7 +114,7 @@ See [Privacy](#privacy) for everything ChatCtrl connects to.
 Voice and video calls work in direct chats and rooms, and with everyone on your homeserver who uses Element X or Element Web (MatrixRTC, the calls Element X makes). ChatCtrl uses Element Call, the same call screen Element X has (the same release), built from source and bundled in the app: it runs in your phone's own WebView and nothing of it is loaded from the web. ChatCtrl's build leaves out Element Call's Google reCAPTCHA and sign-up pages, PostHog analytics, Sentry crash reporting, bug-report upload and MediaPipe background blur, none of which calls use (see [Build from source](#build-from-source)).
 
 - **Start a call** with the phone (voice, direct chats) or camera (video) button at the top of a chat. While a call is going on in a chat, a **Call in progress** banner there has **Join**, and the chat list shows a camera next to the chat.
-- **Incoming calls** in direct chats ring on a full screen, also over the phone's lock screen, with **Answer** and **Decline**, until the caller hangs up, you answer or decline on another device, or after 90 seconds (then you get a **Missed call** notification). Ringing comes through push, so [instant push with ntfy](#tips-and-troubleshooting) has to be on. On Android 14 and newer, check **Settings › Calls › Full-screen incoming calls**. A call started in a group shows as a normal notification.
+- **Incoming calls** in direct chats ring on a full screen, also over the phone's lock screen, with **Answer** and **Decline**, until the caller hangs up, you answer or decline on another device, or after 90 seconds (then you get a **Missed call** notification). Ringing comes through push, so [instant push with ntfy](#tips-and-troubleshooting) has to be on. Also check **Settings › Calls › Full-screen incoming calls** is on. A call started in a group shows as a normal notification.
 - **During a call**: mute, camera on or off, switch camera, and the audio output (speaker, earpiece, wired headphones or Bluetooth) are on the call screen. Going back or home shrinks the call to a picture-in-picture window, and the **Ongoing call** notification has **Hang up**. The camera and microphone are only asked for the first time you start or answer a call.
 - **With the app lock on**, answering a call or opening the call screen shows the lock screen first, a call that's already running keeps going while ChatCtrl locks, and the call never shows in Recents. With message content hidden in notifications (the app lock's default), the ringing screen and notifications say "Incoming call" without the caller's name.
 
