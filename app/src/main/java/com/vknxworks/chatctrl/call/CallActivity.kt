@@ -235,7 +235,7 @@ class CallActivity : ComponentActivity() {
                 // hidden from apps misusing accessibility. Never during the call itself.
                 val shielded = locked || AppLock.request != null
                 LaunchedEffect(shielded) {
-                    if (!isFinishing && !isDestroyed) window.shield(shielded)
+                    if (!isFinishing && !isDestroyed) window.shield(shielded, sensitiveData = shielded)
                 }
                 // Start the call once the app is unlocked.
                 LaunchedEffect(pendingJoin, locked) {

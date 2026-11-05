@@ -2,6 +2,14 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v2.0.4 (2026-11-05)
+
+Password managers work on sign-in and secret screens again.
+
+### Fixed
+
+- Password managers can fill the password sign-in, the recovery key and the other secret dialogs (such as the key backup passphrase) again. 2.0.3 hid them, and "can't be undone" confirmations, from every app that reads the screen through accessibility, which also blocked password managers that fill that way; now only the lock screen, the PIN screens and "Forgot PIN?" are hidden from them. Other apps' floating windows are still kept off those screens and dialogs, and screen readers such as TalkBack keep working everywhere.
+
 ## v2.0.3 (2026-11-05)
 
 More protection for the PIN screen, your recovery key and confirmations, built for Android 16, and a way to check that a download really comes from this repo. Nothing works differently in day-to-day use.

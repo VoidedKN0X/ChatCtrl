@@ -503,14 +503,16 @@ fun CtrlDialog(
     text: (@Composable () -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
     shielded: Boolean = false,
+    /** The app lock's own dialogs ("Forgot PIN?"): also hidden from apps misusing accessibility. */
+    lockDialog: Boolean = false,
 ) {
     // Destructive confirmations, "Forgot PIN?" and dialogs that show a secret (SecureDialog): no other app's
     // floating window over them while they show.
-    val shield = shielded || properties.securePolicy == androidx.compose.ui.window.SecureFlagPolicy.SecureOn
+    val shield = shielded || lockDialog || properties.securePolicy == androidx.compose.ui.window.SecureFlagPolicy.SecureOn
     AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            if (shield) com.vknxworks.chatctrl.ui.ShieldDialogWindow()
+            if (shield) com.vknxworks.chatctrl.ui.ShieldDialogWindow(sensitiveData = lockDialog)
             confirmButton()
         },
         modifier = modifier.border(1.dp, CtrlColors.Border, CtrlShapes.Dialog),
