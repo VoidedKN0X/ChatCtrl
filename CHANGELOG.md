@@ -2,6 +2,18 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v2.0.7 (2026-11-13)
+
+### Security
+
+- **Your sign-in and the key to your messages can use the phone's security chip.** On a new sign-in after a fresh install, the key that encrypts your sign-in and the key to ChatCtrl's encrypted message and encryption-key databases is made in the phone's separate security chip (StrongBox) when it has one, and in its regular secure hardware otherwise. If you're already signed in, your existing key stays where it is and nothing changes for you.
+- **Wake-ups from ntfy are checked more strictly.** The secret that proves a push really comes from ntfy is now compared in a way that gives nothing away about it, however many fake pushes another app sends.
+- **The build tool download is checked.** The exact Gradle version used to build ChatCtrl is now verified against its published checksum before it's used.
+
+### Fixed
+
+- **No more lost sign-in on a first start that does two things at once.** If a push arrived at the very moment ChatCtrl first set up its encryption key, two keys could be made and the first one lost. Making the key now happens one at a time.
+
 ## v2.0.6 (2026-11-12)
 
 ### Changed

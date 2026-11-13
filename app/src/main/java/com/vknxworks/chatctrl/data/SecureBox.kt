@@ -14,15 +14,26 @@ object SecureBox {
     private const val ALIAS = "chatctrl_sessions"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
 
+    // One at a time: two callers making the key at once (say the push receiver and the app starting) would each make
+    // one, and whatever was encrypted with the first could never be read again.
+    @Synchronized
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         (ks.getEntry(ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+        // A new key goes into the phone's separate security chip (StrongBox) when it has one, otherwise into the
+        // regular secure hardware. A key made before stays where it is.
+        return runCatching { generate(strongBox = true) }.getOrElse { generate(strongBox = false) }
+    }
+
+    private fun generate(strongBox: Boolean): SecretKey {
         val gen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
         gen.init(
             KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true)
                 .setKeySize(256)
+                .setIsStrongBoxBacked(strongBox)
                 .build()
         )
         return gen.generateKey()

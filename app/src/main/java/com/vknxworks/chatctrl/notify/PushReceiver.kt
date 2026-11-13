@@ -22,7 +22,9 @@ class PushReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val token = intent.getStringExtra(UnifiedPush.EXTRA_TOKEN) ?: return
-        if (token != UnifiedPush.token(context)) return
+        val own = UnifiedPush.token(context) ?: return
+        // Compared in constant time, so the token can't be guessed a character at a time.
+        if (!java.security.MessageDigest.isEqual(token.toByteArray(), own.toByteArray())) return
         val sender = sentFromPackage
         if (sender != null && sender != UnifiedPush.NTFY) return
         // Keep the CPU awake while the message is saved and the fetch job is handed to Android.
