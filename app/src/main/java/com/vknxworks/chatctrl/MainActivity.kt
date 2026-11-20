@@ -42,6 +42,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Recents shows a blank card until the settings are read (then "Hide in recent apps" decides).
         setRecentsScreenshotEnabled(false)
+        // Out of screenshots and screen recordings from the very first frame when the app opens locked or with
+        // "Hide in screenshots" on (both are read from settings that are already loaded). WindowPrivacy below
+        // keeps the flag up to date after that, with the same rule.
+        run {
+            val g = ChatCtrlApp.graph
+            val lockedNow = (g.lock.legacyPinSet && !g.vault.enabled) || (g.vault.enabled && !AppLock.unlocked)
+            if (g.lock.hideScreenshots || lockedNow) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
         handleIntent(intent)
         setContent {
             ChatCtrlTheme {

@@ -122,6 +122,17 @@ object MediaFiles {
         File(context.cacheDir, "shared").listFiles()?.forEach { if (now - it.lastModified() > 24 * 3_600_000L) it.deleteRecursively() }
     }
 
+    /**
+     * Removes the decrypted copies of attachments and voice messages when the app locks, so nothing readable is
+     * left on disk behind the PIN. Only the files go, not the folders (a download that is still running can finish).
+     * Outgoing uploads (the "upload" folder) stay: one may still be sending, and they are removed after sending anyway.
+     */
+    fun wipeDecrypted(context: Context) {
+        listOf(File(context.cacheDir, "media"), File(context.cacheDir, "shared")).forEach { dir ->
+            dir.listFiles()?.forEach { it.deleteRecursively() }
+        }
+    }
+
     /** Removes every downloaded, decrypted or outgoing file (on sign-out). */
     fun wipeAll(context: Context) {
         plainDirs(context).forEach { it.deleteRecursively() }

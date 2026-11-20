@@ -140,6 +140,9 @@ class AppGraph(val context: Context) {
      */
     fun onLocked() {
         vault.close()
+        // Decrypted attachments opened or shared earlier don't stay readable on disk while the app is locked.
+        // (Opening a file in another app doesn't lock ChatCtrl, so the file is still there for that app.)
+        scope.launch(Dispatchers.IO) { runCatching { MediaFiles.wipeDecrypted(context) } }
         if (!sealing()) return
         // A call keeps running while the app locks: the session is shut down when the call ends.
         if (com.vknxworks.chatctrl.call.CallManager.inCall) {

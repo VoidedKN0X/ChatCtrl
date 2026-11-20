@@ -56,7 +56,8 @@ class ClientFactory(private val context: Context, private val store: SessionStor
         return ClientBuilder()
             .sqliteStore(store)
             .setSessionDelegate(delegate)
-            .userAgent("ChatCtrl/${BuildConfig.VERSION_NAME} (Android ${Build.VERSION.RELEASE}; ${Build.MODEL})")
+            // Only the app and its version: the homeserver doesn't need the phone model or Android version.
+            .userAgent("ChatCtrl/${BuildConfig.VERSION_NAME} (Android)")
             .autoEnableBackups(true)
             // When a message can't be decrypted (its key never reached this device, e.g. it was asleep or offline
             // when it was sent), fetch that key from the key backup straight away, as Element X does.
