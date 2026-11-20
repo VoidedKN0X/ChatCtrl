@@ -2,6 +2,13 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Built and checked by CI only: nothing here had been run on a phone when it was pushed.
+
+### Faster
+
+- **Starting the app does a little less before the first frame.** The small index behind the "Draft: …" lines in the chat list is stored encrypted, and it was read and decrypted (a call into the phone's secure key storage) on the main thread while the app started, before anything was drawn, also when the app was only started in the background for a notification. It is now read in the background right after the start. The chat list shows its draft lines as soon as the index is in, which is long before the list itself is there. Nothing can be lost by this: saving a draft line always waits for the index first, and signing out still clears it.
 ## v2.1.0 (2026-11-20)
 
 **This release encrypts some of what the app stores on the phone. An older version cannot read it afterwards, so export or back up anything you need before you update (details below).** Built and checked by CI only: nothing in this release had been run on a phone when it was published.
