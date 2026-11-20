@@ -21,15 +21,20 @@ android {
         ndk { abiFilters += listOf("arm64-v8a") }
     }
 
-    // Release signing from env (GitHub secrets). Local builds fall back to the debug key; CI must never do that.
+    // Release signing. On GitHub Actions the build job has no signing key at all: it sets UNSIGNED_RELEASE=true
+    // and gets app-release-unsigned.apk, which a separate job signs with apksigner (see .github/workflows/build.yml).
+    // An unsigned APK cannot be installed, so nothing unsigned can ship. A keystore from environment variables still
+    // works (SIGNING_KEYSTORE_PATH, SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS, SIGNING_KEY_PASSWORD). Local builds
+    // without one fall back to the debug key; on CI a build that has neither a key nor UNSIGNED_RELEASE=true fails.
     val ksPath = System.getenv("SIGNING_KEYSTORE_PATH")
     val onCi = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
     val signingReady = !ksPath.isNullOrBlank() && file(ksPath).exists() &&
         !System.getenv("SIGNING_STORE_PASSWORD").isNullOrBlank() &&
         !System.getenv("SIGNING_KEY_ALIAS").isNullOrBlank() &&
         !System.getenv("SIGNING_KEY_PASSWORD").isNullOrBlank()
-    if (onCi && !signingReady) {
-        throw GradleException("Release signing values are missing on CI; refusing to sign the release with the debug key.")
+    val unsignedRelease = System.getenv("UNSIGNED_RELEASE") == "true"
+    if (onCi && !signingReady && !unsignedRelease) {
+        throw GradleException("Release signing values are missing on CI and UNSIGNED_RELEASE=true is not set; refusing to sign the release with the debug key.")
     }
     signingConfigs {
         if (signingReady) {
@@ -47,8 +52,11 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.findByName("release")
-                ?: if (onCi) throw GradleException("No release signing config on CI") else signingConfigs.getByName("debug")
+            // Asked for explicitly: no signing here at all, the output is app-release-unsigned.apk.
+            signingConfig = if (unsignedRelease) null else (
+                signingConfigs.findByName("release")
+                    ?: if (onCi) throw GradleException("No release signing config on CI") else signingConfigs.getByName("debug")
+                )
         }
     }
 

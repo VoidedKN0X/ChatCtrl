@@ -2,7 +2,17 @@
 
 ## Dependency verification
 
-Gradle checks every library and plugin download against its SHA-256 in `gradle/verification-metadata.xml` (checksums only, no PGP). When a dependency or plugin changes, run the `verification-metadata.yml` workflow (`gh api -X POST repos/VoidedKN0X/ChatCtrl/actions/workflows/verification-metadata.yml/dispatches -f ref=main`), decode the file from its log, check the diff (only Maven Central, Google's Maven, the Gradle plugin portal and the two GitHub-hosted repos in `settings.gradle.kts` for the Rust SDK and rustls-platform-verifier) and commit it in the same push. Never turn verification off or make it lenient. The workflow and CodeQL use a placeholder for `element-call/dist`; only the build workflow builds Element Call.
+Gradle checks every library and plugin download against its SHA-256 in `gradle/verification-metadata.xml` (checksums only, no PGP). When a dependency or plugin changes, run the `verification-metadata.yml` workflow (`gh api -X POST repos/VoidedKN0X/ChatCtrl/actions/workflows/verification-metadata.yml/dispatches -f ref=main`), decode the file from its log, check the diff (only Maven Central, Google's Maven and the two GitHub-hosted repos in `settings.gradle.kts` for the Rust SDK and rustls-platform-verifier) and commit it in the same push. Never turn verification off or make it lenient. The workflow and CodeQL use a placeholder for `element-call/dist`; only the build workflow builds Element Call.
+
+`settings.gradle.kts` lists only `google()` and `mavenCentral()` for plugins, not `gradlePluginPortal()`: the portal serves different files for the Kotlin plugin markers, which made verification fail whenever Maven Central had a hiccup. Don't add it back unfiltered (see the comment in that file).
+
+## Build and signing (CI)
+
+`.github/workflows/build.yml` has five jobs: `version` (is this a release?), `element-call` (builds Element Call from source, no secrets), `build` (Gradle, **no secrets**, `UNSIGNED_RELEASE=true` gives `app-release-unsigned.apk`; runs every check), `sign` (no checkout, no Gradle: `zipalign` + `apksigner` with the release key, then checks the signer against `EXPECTED_CERT_SHA256` and that the APK's contents didn't change) and `release` (attestation, release notes, publish).
+
+- Never give the `build` or `element-call` job a secret, and never run Gradle or check out the repo in `sign`. New build checks (tests, lint, APK checks) go in `build`.
+- `EXPECTED_CERT_SHA256` in `build.yml` must match the fingerprint in `SECURITY.md` and `README.md`; the build fails if it doesn't.
+- No Gradle cache in any workflow (`cache-disabled: true`): a cache saved by a failed run used to break every later build. The pnpm cache of the `element-call` job is a different cache and stays.
 
 ## Encryption at rest
 

@@ -65,7 +65,7 @@ Your account, devices, security and recovery, **Settings**, **Sign out** and **A
 ## Is it safe to install?
 
 - **Open source:** all of ChatCtrl's code is in this repo, under the GPL-3.0 licence.
-- **Built by GitHub, not on a personal computer:** every release on the [Releases page](https://github.com/VoidedKN0X/ChatCtrl/releases) is built from this code by [the build workflow](.github/workflows/build.yml) on GitHub Actions, including the bundled Element Call, which is built from source in the same run.
+- **Built by GitHub, not on a personal computer:** every release on the [Releases page](https://github.com/VoidedKN0X/ChatCtrl/releases) is built from this code by [the build workflow](.github/workflows/build.yml) on GitHub Actions, including the bundled Element Call, which is built from source in the same run. The signing key is kept away from the build: one job builds the APK without any secrets, and a separate job that runs no code from this repo signs it and checks the signature against the fingerprint below.
 - **Always signed with the same key:** Android refuses to install an update signed with a different key, and the [CtrlF-Droid repo](https://voidedkn0x.github.io/CtrlF-Droid/) only accepts APKs signed with this one. The SHA-256 fingerprint of the signing certificate is:
 
   ```
