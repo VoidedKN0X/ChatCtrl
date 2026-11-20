@@ -124,7 +124,18 @@ class TimelineController(
                 handles += t.addListener(object : TimelineListener {
                     override fun onUpdate(diff: List<TimelineDiff>) { diffs.trySend(diff) }
                 })
-                scope.launch { for (batch in diffs) apply(batch) }
+                scope.launch {
+                    for (batch in diffs) {
+                        apply(batch)
+                        // Updates that are already waiting (the SDK sends many small ones while loading history)
+                        // are applied too before the list is published once, instead of copying it for each.
+                        while (true) {
+                            val more = diffs.tryReceive().getOrNull() ?: break
+                            apply(more)
+                        }
+                        publish()
+                    }
+                }
                 // The pagination-status stream exists only for the live timeline; threads and event-focused
                 // timelines throw here, so they rely on paginateBackwards()' return value instead.
                 if (threadRootId == null && focusEventId == null) {
@@ -179,6 +190,10 @@ class TimelineController(
                 TimelineDiff.PopFront -> items.removeFirstOrNull()
             }
         }
+    }
+
+    /** Hands the current list to the screen. Called once after a run of [apply]s. */
+    private fun publish() {
         _entries.value = ArrayList(items)
     }
 

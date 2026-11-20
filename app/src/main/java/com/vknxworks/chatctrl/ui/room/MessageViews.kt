@@ -703,12 +703,16 @@ private val urlRegex = Regex("""(https?://[^\s<>"]+[^\s<>".,;:!?)\]}'])|(\bmatri
 
 private val allowedLinkSchemes = setOf("http", "https", "matrix", "mailto")
 
+// Compiled once: [shownHost] runs for every link in every formatted message.
+private val schemePrefixRegex = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
+private val bareHostRegex = Regex("^[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}(:\\d+)?([/?#].*)?$")
+
 /** The host a piece of visible link text claims to point at ("example.com", "https://example.com/x"), or null. */
 private fun shownHost(text: String): String? {
     val t = text.trim()
     if (t.isEmpty() || t.any { it.isWhitespace() }) return null
-    val withScheme = if (Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://").containsMatchIn(t)) t
-    else if (Regex("^[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}(:\\d+)?([/?#].*)?$").matches(t)) "https://$t"
+    val withScheme = if (schemePrefixRegex.containsMatchIn(t)) t
+    else if (bareHostRegex.matches(t)) "https://$t"
     else return null
     return runCatching { android.net.Uri.parse(withScheme).host }.getOrNull()?.lowercase()?.removePrefix("www.")
 }

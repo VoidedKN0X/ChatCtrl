@@ -2,6 +2,30 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Changes that are in the code but not in a release yet. They ship with the next version. None of this was run on a phone: the changes were checked by reading the code and by the CI build only.
+
+### Security
+
+- **Decrypted attachments are deleted when the app locks.** When you open, share, save or play an attachment or voice message, ChatCtrl keeps a decrypted copy in its private cache so it can hand it to another app, and removes it after a day. Those copies used to stay there while ChatCtrl was locked. They are now deleted the moment the app locks (with the app lock on). Opening a file in another app doesn't lock ChatCtrl, so the file is still there for that app; if you come back so much later that ChatCtrl locks, the copy is removed, and tapping the attachment again simply downloads it again. Files that are still being sent are not touched, and the one-day limit is unchanged.
+- **The app is hidden from screenshots from its very first frame when it opens locked.** The "not in screenshots or screen recordings" protection was switched on a moment after the first frame was drawn. It is now set before anything is drawn when the app opens locked or with "Hide in screenshots" on. Nothing changes while the app is open.
+
+### Privacy
+
+- **Your homeserver no longer gets your phone model and Android version with every request.** ChatCtrl identified itself to the server as "ChatCtrl/version (Android 16; phone model)". It now says only "ChatCtrl/version (Android)". The name of the session in your device list ("ChatCtrl on ...") is unchanged.
+
+### Faster
+
+- **Recording a voice message no longer redraws the whole chat.** The moving level bars and the timer updated the entire chat screen many times a second while recording; now only the recording bar itself is redrawn. It looks the same.
+- **Loading older messages does less work.** While history loads, the Matrix SDK sends many small updates in a row, and the whole message list was copied and handed to the screen after each one. Updates that are already waiting are now applied together and the list is handed over once. The messages shown are the same.
+- **Links in formatted messages are checked a little quicker.** The two text patterns used to compare a link's visible text with its real address are built once instead of for every link.
+
+### Not changed
+
+- ChatCtrl has no home-screen widgets and no Quick Settings tiles, so there was nothing to remove. ("Widget" in the call code is Element Call's own term.)
+- The Matrix SDK version, end-to-end encryption, key storage and the map library are untouched.
+
 ## Project updates (2026-11-19)
 
 ### Project

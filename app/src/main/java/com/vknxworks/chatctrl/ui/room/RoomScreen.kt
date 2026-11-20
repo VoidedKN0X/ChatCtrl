@@ -634,8 +634,9 @@ fun RoomScreen(
                         onPoll = { attachMenu = false; creatingPoll = true },
                         onLocation = { attachMenu = false; pickingLocation = true },
                         recording = recording,
-                        levels = levels,
-                        elapsed = elapsed,
+                        // Read inside the recording bar only, so a new level sample redraws that bar, not the whole chat.
+                        levels = { levels },
+                        elapsed = { elapsed },
                         onMic = {
                             if (context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                                 recording = recorder.start()
@@ -969,8 +970,8 @@ private fun Composer(
     onPoll: () -> Unit,
     onLocation: () -> Unit = {},
     recording: Boolean = false,
-    levels: List<Float> = emptyList(),
-    elapsed: Long = 0,
+    levels: () -> List<Float> = { emptyList() },
+    elapsed: () -> Long = { 0L },
     onMic: () -> Unit = {},
     onCancelRecording: () -> Unit = {},
     onSendRecording: () -> Unit = {},
@@ -1092,8 +1093,10 @@ private fun Composer(
 
 /** Shown in place of the input while recording: live level bars, the timer, cancel and send. */
 @Composable
-private fun RecordingIsland(haze: HazeState, levels: List<Float>, elapsed: Long, onCancel: () -> Unit, onSend: () -> Unit) {
+private fun RecordingIsland(haze: HazeState, levelsNow: () -> List<Float>, elapsedNow: () -> Long, onCancel: () -> Unit, onSend: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val levels = levelsNow()
+    val elapsed = elapsedNow()
     Row(
         Modifier.fillMaxWidth().glassIsland(haze, CtrlShapes.Card).padding(4.dp).height(56.dp),
         verticalAlignment = Alignment.CenterVertically,
