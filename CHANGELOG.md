@@ -2,6 +2,21 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Built and checked by CI only: nothing here has been run on a phone. No new version yet, so nothing is published.
+
+### Security
+
+- **The list of your own servers on the sign-in screen is now stored encrypted.** ChatCtrl remembers up to five custom homeservers you signed in to before ("Your servers"), so you don't have to type them again. That list names your own servers and was kept in plain text in ChatCtrl's settings; it is now encrypted with the same Android Keystore key that already protects your saved sign-in and the drafts index. A list saved by an older version is encrypted in the background the next time the app starts: the encrypted copy is made and read back first, and the plain copy is removed in the same write that stores it. If encrypting fails, the list simply stays as it was. If the Keystore key is ever lost, the list reads as empty (you type the server once more); nothing else depends on it. An older version of ChatCtrl doesn't know the encrypted list and shows no "Your servers" after a downgrade.
+- **Everything else was checked and deliberately left as it is:**
+  - *Messages, rooms, keys and the search index* are in the Matrix SDK's own stores, which are already encrypted with a random key that is itself kept encrypted by the Keystore. Not touched.
+  - *Your saved sign-in and the drafts index* were already encrypted.
+  - *Decrypted attachments in the cache* (things you opened, shared or are sending) stay normal files, because the viewer, the player and other apps open them directly; they are removed after a day and when the app locks. The same goes for the map tiles of the location screen, which the map library reads itself.
+  - *Notification bookkeeping* (which room was last notified when, and pushes still waiting to be fetched: room and event IDs, no names or text) and *the push address and token* stay in plain settings: they are read and written the moment a push arrives, also when Android has only just started the app, and that path must not wait for a key or fail because of one.
+  - *The connection log* (Settings › About) holds times and connection states only, no names, servers or content, and a line is added to it from every part of the app; it stays a plain file.
+  - *Settings* (theme, bubbles, switches) are not content.
+
 ## v2.0.8 (2026-11-20)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

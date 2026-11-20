@@ -87,13 +87,46 @@ class Prefs(context: Context) {
     val showStateEvents: StateFlow<Boolean> = _showHiddenEvents.asStateFlow()
     fun setShowStateEvents(on: Boolean) { sp.edit().putBoolean("show_state_events", on).apply(); _showHiddenEvents.value = on }
 
-    /** Custom servers signed in to before, newest first, offered again on the server picker. */
+    /**
+     * Custom servers signed in to before, newest first, offered again on the server picker. The list names your
+     * own homeservers, so it is stored encrypted with the Keystore key ([SecureBox], like the drafts index) under
+     * "recent_servers_enc"; a list an older version saved in plain text ("recent_servers") is still read, and
+     * [encryptRecentServers] moves it over. Reading and writing use the Keystore: call them off the main thread.
+     * A list that can't be decrypted any more (the Keystore key is gone) reads as empty; it only saves typing.
+     */
     var recentCustomServers: List<String>
-        get() = sp.getString("recent_servers", "").orEmpty().split('\n').filter { it.isNotBlank() }
-        set(value) { sp.edit().putString("recent_servers", value.take(5).joinToString("\n")).apply() }
+        @Synchronized get() {
+            val raw = sp.getString(RECENT_ENC, null)?.let { SecureBox.decrypt(it) } ?: sp.getString(RECENT_PLAIN, "").orEmpty()
+            return raw.split('\n').filter { it.isNotBlank() }
+        }
+        @Synchronized set(value) {
+            val text = value.take(5).joinToString("\n")
+            // Encrypted only when it reads back the same; otherwise saved as before, in plain text.
+            val enc = runCatching { SecureBox.encrypt(text) }.getOrNull()?.takeIf { SecureBox.decrypt(it) == text }
+            if (enc != null) sp.edit().putString(RECENT_ENC, enc).remove(RECENT_PLAIN).apply()
+            else sp.edit().putString(RECENT_PLAIN, text).remove(RECENT_ENC).apply()
+        }
 
+    @Synchronized
     fun rememberCustomServer(address: String) {
         if (Servers.standard.any { it.address.equals(address, true) }) return
         recentCustomServers = listOf(address) + recentCustomServers.filterNot { it.equals(address, true) }
+    }
+
+    /**
+     * Encrypts a server list an older version saved in plain text (once, at start, off the main thread). The
+     * plain copy is only dropped in the same write that stores an encrypted copy that was read back first.
+     */
+    @Synchronized
+    fun encryptRecentServers() {
+        if (!sp.contains(RECENT_PLAIN) || sp.contains(RECENT_ENC)) return
+        val plain = sp.getString(RECENT_PLAIN, "").orEmpty().split('\n').filter { it.isNotBlank() }
+        if (plain.isEmpty()) return
+        recentCustomServers = plain
+    }
+
+    private companion object {
+        const val RECENT_PLAIN = "recent_servers"
+        const val RECENT_ENC = "recent_servers_enc"
     }
 }

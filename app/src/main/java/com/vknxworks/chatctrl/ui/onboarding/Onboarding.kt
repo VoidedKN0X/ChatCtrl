@@ -56,6 +56,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -83,7 +84,9 @@ import com.vknxworks.chatctrl.ui.NotEncryptedBadge
 import com.vknxworks.chatctrl.ui.SecureScreen
 import com.vknxworks.chatctrl.ui.isCleartext
 import com.vknxworks.chatctrl.ui.openUrl
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.res.stringResource
 import com.vknxworks.chatctrl.Strings
 import com.vknxworks.chatctrl.R
@@ -124,11 +127,19 @@ fun ServerPickerScreen(message: String?, onServerReady: (ServerDetails) -> Unit,
     var custom by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf(message) }
-    val recent = remember { graph.prefs.recentCustomServers }
+    // Stored encrypted with the Keystore: read off the main thread, shown as soon as it's there.
+    val recent by produceState(initialValue = emptyList<String>()) {
+        value = withContext(Dispatchers.IO) { runCatching { graph.prefs.recentCustomServers }.getOrDefault(emptyList()) }
+    }
 
     // An http homeserver would get your password and access token in plain text: ask before using one.
     var insecure by remember { mutableStateOf<String?>(null) }
     var insecureDetails by remember { mutableStateOf<ServerDetails?>(null) }
+
+    // Saved encrypted (Keystore), so off the main thread; it outlives this screen, which closes right after.
+    fun rememberServer(address: String) {
+        graph.scope.launch(Dispatchers.IO) { runCatching { graph.prefs.rememberCustomServer(address) } }
+    }
 
     fun discover(target: String, httpConfirmed: Boolean) {
         busy = target
@@ -142,7 +153,7 @@ fun ServerPickerScreen(message: String?, onServerReady: (ServerDetails) -> Unit,
                         // .well-known pointed the server name at plain http: never downgrade silently.
                         insecureDetails = details
                     } else {
-                        if (Servers.standard.none { it.address.equals(target, true) }) graph.prefs.rememberCustomServer(target)
+                        if (Servers.standard.none { it.address.equals(target, true) }) rememberServer(target)
                         onServerReady(details)
                     }
                 }
@@ -178,7 +189,7 @@ fun ServerPickerScreen(message: String?, onServerReady: (ServerDetails) -> Unit,
             // ConfirmDialog calls onDismiss before onConfirm, so only clear the dialog here.
             onDismiss = { insecureDetails = null },
             onConfirm = {
-                if (Servers.standard.none { it.address.equals(details.address, true) }) graph.prefs.rememberCustomServer(details.address)
+                if (Servers.standard.none { it.address.equals(details.address, true) }) rememberServer(details.address)
                 onServerReady(details)
             },
         )

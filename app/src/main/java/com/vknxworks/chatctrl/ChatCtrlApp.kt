@@ -51,6 +51,8 @@ class ChatCtrlApp : Application(), SingletonImageLoader.Factory {
         graph = AppGraph(this)
         // Decrypted attachments only live in the cache for a day.
         graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { MediaFiles.purgeOld(this@ChatCtrlApp) } }
+        // The list of custom servers signed in to before: encrypt one an older version left in plain text.
+        graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { graph.prefs.encryptRecentServers() } }
         Notifier.createChannels(this)
         com.vknxworks.chatctrl.call.CallNotifications.createChannels(this)
         graph.boot()
