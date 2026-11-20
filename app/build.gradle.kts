@@ -13,8 +13,8 @@ android {
         minSdk = 35
         targetSdk = 36
         // Bump both to publish a new release (see CHANGELOG.md).
-        versionCode = 70
-        versionName = "2.0.8"
+        versionCode = 71
+        versionName = "2.1.0"
 
         // The Rust SDK ships a native library per CPU type (~60 MB each). Phones running Android 15+
         // are 64-bit ARM, so only that one is packaged; add "x86_64" here to run on an emulator.
