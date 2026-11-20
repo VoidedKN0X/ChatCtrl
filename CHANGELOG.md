@@ -9,6 +9,7 @@ Built and checked by CI only: nothing here had been run on a phone when it was p
 ### Faster
 
 - **Starting the app does a little less before the first frame.** The small index behind the "Draft: …" lines in the chat list is stored encrypted, and it was read and decrypted (a call into the phone's secure key storage) on the main thread while the app started, before anything was drawn, also when the app was only started in the background for a notification. It is now read in the background right after the start. The chat list shows its draft lines as soon as the index is in, which is long before the list itself is there. Nothing can be lost by this: saving a draft line always waits for the index first, and signing out still clears it.
+- **The chat list is rebuilt less often while it loads.** During the first sync the server sends the room list as many small updates in a row, and the whole list was copied, de-duplicated and redrawn after each one. Updates that are already waiting are now applied one after the other exactly as before, and the list is shown once they are all in (and at least every 150 ms during a long run, so a big account still fills in as it goes). The list ends up the same.
 ## v2.1.0 (2026-11-20)
 
 **This release encrypts some of what the app stores on the phone. An older version cannot read it afterwards, so export or back up anything you need before you update (details below).** Built and checked by CI only: nothing in this release had been run on a phone when it was published.
