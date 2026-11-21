@@ -400,6 +400,7 @@ fun MessageRow(
                 }
                 if (item.status == SendStatus.FAILED) {
                     Text(stringResource(R.string.not_sent_tap_to_retry_hold_for), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(4.dp))
+                    item.sendError?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp)) }
                 }
                 if (item.reactions.isNotEmpty()) {
                     ReactionsRow(item.reactions, own) { actions.onReact(item, it) }

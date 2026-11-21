@@ -2,6 +2,15 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v2.2.1 (2026-11-21)
+
+Built and checked by CI only: not run on a phone when it was published.
+
+### Fixed
+
+- **A message that fails to send now says why.** Under "Not sent. Tap to retry, hold for options." the chat shows the reason the Matrix SDK reported (for example a server error, or a device or identity that needs verifying). Until now that reason was thrown away, so a failed send could not be explained. The connection log (Settings) gets one line per failed message with only the kind of error, no names, rooms or servers.
+- **Tapping a failed message to retry really retries.** After a failed send the SDK pauses sending for that chat. ChatCtrl never switched it back on, so a retry (and every later message in that chat) could stay stuck until the app was restarted. Retry now switches sending for the chat back on first.
+
 ## v2.2.0 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published. It is the first release built with the new build tools (Android Gradle Plugin 9, stricter code shrinking), so update over your installed version and check that your data and settings are still there.

@@ -80,6 +80,7 @@ class TimelineController(
     private val diffs = Channel<List<TimelineDiff>>(Channel.UNLIMITED)
     private val items = ArrayList<TimelineEntry>()
     private val failedHandles = HashMap<String, SendHandle>()
+    private val loggedFailures = HashSet<String>()
     private val requestedReplies = HashSet<String>()
 
     private val _entries = MutableStateFlow<List<TimelineEntry>>(emptyList())
@@ -288,11 +289,18 @@ class TimelineController(
             is TimelineItemContent.FailedToParseState -> UiContent.Event(Strings.str(R.string.couldn_t_read_a_room_event, c.eventType))
         }
 
+        var sendError: String? = null
         val status = when (val s = e.localSendState) {
             null, is EventSendState.Sent -> SendStatus.SENT
             is EventSendState.NotSentYet -> SendStatus.SENDING
             is EventSendState.SendingFailed -> {
                 e.lazyProvider.getSendHandle()?.let { failedHandles[key] = it }
+                // The reason the SDK gives, shown under the message so a failed send can be explained.
+                sendError = (s.error.toString() + if (s.isRecoverable) " (will retry)" else "").take(400)
+                // The connection log gets only the kind of error: no names, rooms or servers.
+                if (loggedFailures.add(key)) {
+                    ConnectionLog.log("send failed: ${s.error::class.simpleName}, ${if (s.isRecoverable) "recoverable" else "not recoverable"}")
+                }
                 SendStatus.FAILED
             }
         }
@@ -327,6 +335,7 @@ class TimelineController(
             threadLatest = threadLatest,
             readBy = e.readReceipts.keys.filter { it != session.userId && it != e.sender },
             shield = shield,
+            sendError = sendError,
             receipts = e.readReceipts.entries
                 .filter { it.key != session.userId && it.key != e.sender }
                 .map { ReceiptUi(it.key, it.value.timestamp?.toLong()) }
@@ -487,7 +496,12 @@ class TimelineController(
         item.id()?.let { t.redactEvent(it, reason) }
     }
 
-    fun retry(item: TimelineEntry.Message) = launchAction { failedHandles.remove(item.key)?.tryResend() }
+    fun retry(item: TimelineEntry.Message) = launchAction {
+        // After a failed send the SDK pauses this chat's send queue; switch it back on, or a retry does nothing.
+        runCatching { room.enableSendQueue(true) }
+        loggedFailures.remove(item.key)
+        failedHandles.remove(item.key)?.tryResend()
+    }
 
     fun cancelSend(item: TimelineEntry.Message) = launchAction { failedHandles.remove(item.key)?.abort(null) }
 

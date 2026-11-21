@@ -31,6 +31,8 @@ sealed interface TimelineEntry {
         val shield: ShieldUi?,
         /** Who has read up to this message (their read receipt sits here), newest first. */
         val receipts: List<ReceiptUi> = emptyList(),
+        /** Why sending failed, as the SDK reported it; only set while [status] is FAILED. */
+        val sendError: String? = null,
     ) : TimelineEntry {
         /** Small grey centred line (joins, renames…) rather than a chat bubble. */
         val isStateLike get() = content is UiContent.Event
