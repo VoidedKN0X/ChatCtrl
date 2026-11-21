@@ -27,8 +27,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Push notifications through [ntfy](https://f-droid.org/packages/io.heckel.ntfy/)** (or another UnifiedPush app whose server has its own Matrix gateway), grouped per chat with reply and Mark as read, with a background check every ~15 minutes as a fallback
 - **Voice and video calls** in direct chats and rooms, with people on Element X and Element Web: the same Element Call as Element X, bundled in the app, with incoming calls ringing on a full screen, picture-in-picture and speaker, earpiece and Bluetooth audio ([what your server needs](#calls))
 - **Link previews and drafts** for every chat
-- **Send a location** (where you are or a dropped pin) and see received locations on an **OpenStreetMap** map, using Android's own location service
-- **Live location**: share where you are with a chat for 15 minutes, 1 hour or 8 hours (updated about every 15 seconds, with a notification and a Stop button while it runs), and follow other people's live locations on the map (Matrix live location, MSC3489, as in Element X)
+- **Locations** on an **OpenStreetMap** map: see locations other people send, and follow their live locations while they share them (Matrix live location, MSC3489, as in Element X). You can send a spot you pick on the map (a dropped pin); ChatCtrl never reads where your phone is and has no location permission
 - **Create rooms**, start direct chats, explore public rooms, and manage members and moderation
 - **Spaces**: show only one space's chats in the chat list, see what's in a space and join its rooms
 - **Share to ChatCtrl** from other apps, several pictures or files at once too, and **forward** a message to another chat
@@ -101,11 +100,9 @@ Your account, devices, security and recovery, **Settings**, **Sign out** and **A
 | Foreground service (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_PHONE_CALL`, `FOREGROUND_SERVICE_MICROPHONE`, `FOREGROUND_SERVICE_CAMERA`) | The **Ongoing call** notification that keeps a call running while you use other apps or the screen is off |
 | Own calls (`MANAGE_OWN_CALLS`) | Lets the ongoing call run as a "phone call" service; no access to your phone app or calls |
 | Full-screen notifications (`USE_FULL_SCREEN_INTENT`) | The full-screen ringing screen for incoming calls |
-| Location (`ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`) | **Send my current location** in a chat, read once when you ask, and **Share live location**, read only while you share. ChatCtrl has no background location permission |
-| Foreground service for location (`FOREGROUND_SERVICE_LOCATION`) | The **Sharing your live location** notification that keeps sending your position while you share it and ChatCtrl is in the background or the screen is off. It only runs while a share is on |
 | Run at startup (`RECEIVE_BOOT_COMPLETED`) | Putting the 15-minute background check for new messages back on schedule after the phone restarts. Added by Android's background work library (WorkManager) |
 
-`DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` also shows up in the app's details: it's an internal permission Android adds to every app built for Android 13 and newer, and only keeps ChatCtrl's own broadcasts private. ChatCtrl has no contacts, phone, SMS or storage permission: files and photos you send are picked with Android's own picker.
+`DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` also shows up in the app's details: it's an internal permission Android adds to every app built for Android 13 and newer, and only keeps ChatCtrl's own broadcasts private. ChatCtrl has no location, contacts, phone, SMS or storage permission: files and photos you send are picked with Android's own picker.
 
 See [Privacy](#privacy) for everything ChatCtrl connects to.
 
@@ -116,7 +113,6 @@ See [Privacy](#privacy) for everything ChatCtrl connects to.
 - **Self-hosted ntfy:** your ntfy server's Matrix push gateway (`https://your-ntfy/_matrix/push/v1/notify`, built into ntfy) is used for every push, so your Matrix server must be able to reach it, and the ntfy server needs `base-url` set in its config. ntfy.sh works too. If the gateway can't be found, *Settings › Notifications* shows an error; no other gateway is ever used.
 - **What a push contains:** only the room and message IDs and an unread count, never the message, sender or room name. ChatCtrl then fetches and decrypts the message itself from your homeserver. Your homeserver sends the push to the Matrix gateway of your own ntfy server, which passes it to ntfy on your phone.
 - **Just your domain doesn't work?** Make sure `https://yourdomain/.well-known/matrix/client` points to your server, or enter the full server address.
-- **Live location:** while you share, ChatCtrl keeps syncing in the background (like during a call) and asks Android for a position about every 15 seconds, so it uses more battery than usual. If Android ends ChatCtrl while you share, positions stop and the share ends by itself at its end time; your own live location in the chat shows **Stop sharing** to end it sooner. In an encrypted chat the positions are encrypted like messages; the "sharing until …" marker is room state, which Matrix doesn't encrypt.
 - **Not included yet:** creating and editing spaces, QR code verification (not in the Matrix Rust SDK yet) and multiple accounts at once.
 
 ## Calls

@@ -142,8 +142,6 @@ class MessageActions(
     /** Name and picture for a user ID, from the room's member list. */
     val member: (String) -> com.vknxworks.chatctrl.matrix.MemberInfo? = { null },
     val onShowReceipts: (TimelineEntry.Message) -> Unit = {},
-    /** "Stop sharing" on your own live location that is still running. */
-    val onStopLiveLocation: (TimelineEntry.Message) -> Unit = {},
 )
 
 /** The accent for details inside a bubble: the accent itself, or the bubble's text colour on an accent bubble. */
@@ -543,7 +541,7 @@ private fun MessageBody(item: TimelineEntry.Message, onBubble: Color, bigEmoji: 
             onBubble = onBubble,
             caption = c.caption,
         )
-        is UiContent.Location -> if (c.live != null) LiveLocationRow(item, c, c.live, onBubble, actions) else AttachmentRow(
+        is UiContent.Location -> if (c.live != null) LiveLocationRow(c, c.live, onBubble) else AttachmentRow(
             Icons.Outlined.Place,
             c.description ?: stringResource(R.string.location_3),
             com.vknxworks.chatctrl.ui.location.parseGeoUri(c.geoUri)?.let { "${it.display()} · ${stringResource(R.string.location_tap_to_view)}" }
@@ -599,16 +597,14 @@ private fun AttachmentRow(icon: androidx.compose.ui.graphics.vector.ImageVector,
 }
 
 /**
- * A live location share: whether it is still running and until when, when the latest position came in, and for your
- * own running share a "Stop sharing" button. Tap opens the latest position on the map.
+ * A live location share someone sent: whether it is still running and until when, and when the latest position came
+ * in. Tap opens the latest position on the map.
  */
 @Composable
 private fun LiveLocationRow(
-    item: TimelineEntry.Message,
     c: UiContent.Location,
     live: com.vknxworks.chatctrl.matrix.LiveShare,
     onBubble: Color,
-    actions: MessageActions,
 ) {
     // Ticks while the share runs, so it turns into "ended" on time without a new event.
     val now by androidx.compose.runtime.produceState(System.currentTimeMillis(), live.endsAt, live.liveFlag) {
@@ -624,20 +620,13 @@ private fun LiveLocationRow(
         live.lastTs != null -> stringResource(R.string.live_location_ended_last, timeOfDay(live.lastTs))
         else -> stringResource(R.string.live_location_ended)
     }
-    Column {
-        AttachmentRow(
-            if (running) Icons.Outlined.MyLocation else Icons.Outlined.LocationOff,
-            c.description ?: stringResource(R.string.live_location_2),
-            status,
-            onBubble,
-            null,
-        )
-        if (running && item.isOwn && item.eventId != null) {
-            TextButton(onClick = { actions.onStopLiveLocation(item) }, modifier = Modifier.padding(start = 4.dp)) {
-                Text(stringResource(R.string.live_location_stop_sharing), color = accentOn(onBubble))
-            }
-        }
-    }
+    AttachmentRow(
+        if (running) Icons.Outlined.MyLocation else Icons.Outlined.LocationOff,
+        c.description ?: stringResource(R.string.live_location_2),
+        status,
+        onBubble,
+        null,
+    )
 }
 
 @Composable

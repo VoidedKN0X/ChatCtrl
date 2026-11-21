@@ -551,13 +551,13 @@ class TimelineController(
     }
 
     /**
-     * Sends an m.location message: [geoUri] (`geo:lat,lon;u=…`), a text body for apps that can't show maps, an
-     * optional [description], and whether it's where you are ([mine], shown as your own location) or a dropped pin.
+     * Sends an m.location message for a spot picked on the map (a dropped pin): [geoUri] (`geo:lat,lon`), a text
+     * body for apps that can't show maps and an optional [description].
      */
-    fun sendLocation(geoUri: String, coordinates: String, description: String?, mine: Boolean, zoom: Int, replyTo: String?) = launchAction {
+    fun sendLocation(geoUri: String, coordinates: String, description: String?, zoom: Int, replyTo: String?) = launchAction {
         val body = description?.let { Strings.str(R.string.location_body_described, it, geoUri) }
-            ?: Strings.str(if (mine) R.string.location_body_mine else R.string.location_body_pin, coordinates, geoUri)
-        it.sendLocation(body, geoUri, description, zoom.coerceIn(3, 20).toUByte(), if (mine) AssetType.SENDER else AssetType.PIN, replyTo)
+            ?: Strings.str(R.string.location_body_pin, coordinates, geoUri)
+        it.sendLocation(body, geoUri, description, zoom.coerceIn(3, 20).toUByte(), AssetType.PIN, replyTo)
     }
 
     /** Sends a recorded voice message (shown with a waveform in Element and other clients). */

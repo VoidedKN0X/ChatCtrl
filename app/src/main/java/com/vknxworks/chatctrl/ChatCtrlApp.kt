@@ -57,7 +57,8 @@ class ChatCtrlApp : Application(), SingletonImageLoader.Factory {
         graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { graph.prefs.encryptRecentServers() } }
         Notifier.createChannels(this)
         com.vknxworks.chatctrl.call.CallNotifications.createChannels(this)
-        com.vknxworks.chatctrl.location.LiveLocationService.createChannel(this)
+        // Live location sharing was removed in 2.3.1: drop its notification channel from Android's settings.
+        runCatching { getSystemService(android.app.NotificationManager::class.java)?.deleteNotificationChannel("live_location") }
         graph.boot()
 
         // Sync while the app is open; the background worker takes over (if enabled) when it isn't.

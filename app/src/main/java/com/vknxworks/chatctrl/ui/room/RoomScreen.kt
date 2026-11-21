@@ -453,7 +453,6 @@ fun RoomScreen(
             showReceipts = showReadReceipts,
             member = { id -> members.firstOrNull { it.userId == id } },
             onShowReceipts = { receiptsFor = it },
-            onStopLiveLocation = { com.vknxworks.chatctrl.location.LiveLocation.stopFromUi(roomId) },
             onSwipeReply = if (permissions.canSend && header?.membership == Membership.JOINED) { item -> mode = ComposerMode.Reply(item) } else null,
         )
     }
@@ -1012,19 +1011,12 @@ fun RoomScreen(
                     geoUri = loc.spot.toGeoUri(),
                     coordinates = loc.spot.display(),
                     description = loc.description,
-                    mine = loc.mine,
                     zoom = loc.zoom,
                     replyTo = (mode as? ComposerMode.Reply)?.item?.eventId,
                 )
                 mode = ComposerMode.Normal
                 followLatest = true
             },
-            // Live location goes to the chat itself, so it isn't offered inside a thread.
-            onShareLive = if (threadRootId == null) { ms ->
-                pickingLocation = false
-                com.vknxworks.chatctrl.location.LiveLocation.start(context, roomId, ms)
-                followLatest = true
-            } else null,
         )
     }
 
@@ -1048,11 +1040,6 @@ fun RoomScreen(
                 }
             },
         )
-    }
-
-    // Problems while starting or stopping a live location share.
-    LaunchedEffect(Unit) {
-        com.vknxworks.chatctrl.location.LiveLocation.errors.collect { snackbar.showSnackbar(it) }
     }
 
     if (creatingPoll) {

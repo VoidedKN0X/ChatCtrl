@@ -2,6 +2,18 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+### Removed
+
+- **ChatCtrl no longer has any location permission.** It never asks for, and can no longer get, access to where your phone is: the location permissions (precise and approximate) and the location foreground-service permission are gone from the app, and the app's manifest now explicitly strips any location permission a library might try to add. After updating, *App info › Permissions* no longer lists Location.
+- **Live location sharing is gone.** **+ › Location › Share live location**, its "Sharing your live location" notification with the **Stop** button, the background service that kept sending your position, and the **Stop sharing** button on your own live location in a chat are all removed. The "Live location" notification channel is deleted from Android's notification settings when the app starts. A share you started before updating stops getting new positions and ends by itself at the end time you picked.
+- **"Send my current location" is gone.** The location screen no longer has the my-location button or **Send my current location**, and it no longer jumps to where you are when it opens. It opens on Belgium; move the map (or tap a spot) to put the pin where you want and send that spot as a dropped pin, with an optional description. This never touches the phone's location.
+
+### Unchanged
+
+- **Locations other people send still show.** A location in a chat still shows its coordinates; tap it to open it on the OpenStreetMap map, copy the coordinates or open it in a maps app. Other people's live locations still show as "Live until 14:30 · updated 14:02" (or "ended"), and the map's pin follows their newest position while it's open. None of this needs a permission, and the map never shows your own position.
+
 ## v2.3.0 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

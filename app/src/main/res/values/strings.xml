@@ -907,22 +907,14 @@
 
     <!-- Sending and viewing locations -->
     <string name="location_send_title">Send location</string>
-    <string name="location_send_mine">Send my current location</string>
     <string name="location_send_pin">Send the pinned location</string>
     <string name="location_picker_hint">Move the map or tap a spot to put the pin somewhere else. Map © OpenStreetMap contributors.</string>
-    <string name="location_my_location">Go to my location</string>
     <string name="location_recenter">Back to the pin</string>
-    <string name="location_preview_mine">Send your location?</string>
     <string name="location_preview_pin">Send this location?</string>
     <string name="location_accuracy">Accurate to about %1$d m</string>
     <string name="location_description_optional">Description (optional)</string>
-    <string name="location_off">Location is turned off. Turn it on in quick settings, or drop a pin on the map.</string>
-    <string name="location_not_found">Couldn\'t find your location. Try again outside, or drop a pin on the map.</string>
-    <string name="location_permission_denied">ChatCtrl needs location access to send where you are. You can still drop a pin on the map.</string>
-    <string name="location_approximate_only">Only your approximate location is allowed, so it may be a few kilometres off. Allow precise location in Android settings for an exact spot.</string>
     <string name="location_open_in_maps">Open in maps app</string>
     <string name="location_tap_to_view">tap to view</string>
-    <string name="location_body_mine">My location: %1$s (%2$s)</string>
     <string name="location_body_pin">Location: %1$s (%2$s)</string>
     <string name="location_body_described" translatable="false">%1$s (%2$s)</string>
     <string name="osm_credit">© OpenStreetMap contributors</string>
@@ -1033,35 +1025,10 @@
     <string name="spaces_load_failed">Couldn\'t load this space</string>
     <string name="spaces_empty">This space has no rooms yet.</string>
     <string name="spaces_contents_footer">Tap a room you\'re in to open it, or a space you\'re in to look inside. Join adds a room to your chats.</string>
-    <!-- Live location -->
-    <string name="live_location_share">Share live location</string>
-    <string name="live_location_share_title">Share your live location?</string>
-    <string name="live_location_share_explain">Everyone in this chat sees where you are, updated about every 15 seconds, until the time runs out or you stop. ChatCtrl shows a notification with a Stop button while it shares, also when it is in the background. In an encrypted chat your positions are encrypted; that you are sharing and until when is not.</string>
-    <plurals name="live_location_minutes">
-        <item quantity="one">%1$d minute</item>
-        <item quantity="other">%1$d minutes</item>
-    </plurals>
-    <plurals name="live_location_hours">
-        <item quantity="one">%1$d hour</item>
-        <item quantity="other">%1$d hours</item>
-    </plurals>
+    <!-- Live locations that others share -->
     <string name="live_location_until_updated">Live until %1$s · updated %2$s</string>
     <string name="live_location_until_waiting">Live until %1$s · waiting for the first position</string>
     <string name="live_location_ended_last">Live location ended · last position %1$s</string>
     <string name="live_location_ended">Live location ended</string>
-    <string name="live_location_stop_sharing">Stop sharing</string>
     <string name="live_location_no_position">No position has come in yet</string>
-    <string name="live_location_start_failed">Couldn\'t start sharing your live location: %1$s</string>
-    <string name="live_location_not_signed_in">not signed in</string>
-    <string name="live_location_no_room">this chat isn\'t available</string>
-    <string name="live_location_no_foreground">Android didn\'t allow it right now. Try again with the chat open.</string>
-    <string name="live_location_stop_failed">Couldn\'t tell the chat that you stopped sharing. Your location is no longer sent, and the share ends by itself at its end time.</string>
-    <string name="channel_live_location">Live location</string>
-    <string name="live_location_notification_title">Sharing your live location</string>
-    <string name="live_location_notification_starting">Starting…</string>
-    <plurals name="live_location_notification_text">
-        <item quantity="one">In %1$d chat · until %2$s</item>
-        <item quantity="other">In %1$d chats · until %2$s</item>
-    </plurals>
-    <string name="live_location_stop">Stop</string>
 </resources>
