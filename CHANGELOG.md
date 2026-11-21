@@ -2,14 +2,21 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
-## Unreleased
+## v2.2.2 (2026-11-21)
 
-Changes on `main` that aren't in a release yet. They ship with the next version.
+Built and checked by CI only: not run on a phone when it was published.
+
+### Rolled back
+
+- **Back to the 2.1.0 app code and the old build tools, because sending stopped working after 2.2.0.** After updating to 2.2.0, messages failed with "Not sent" (the server answered the send with an error 500) while the other side got a notification without a message. The cause is not found yet, so this version goes back to what worked: the app code is exactly 2.1.0's, and the build tools are the ones 2.1.0 was built with (Android Gradle Plugin 8.9.1, Gradle 8.14.3, Kotlin 2.1.20, Compose BOM 2025.04.00). That undoes, for now, everything 2.2.0 added: the background-sync and room-list changes and the new build tools with their stricter code shrinking. Your data is untouched; no storage format changed between these versions.
+- Kept from 2.2.1: a failed message shows the reason under "Not sent", and tapping it to retry switches sending for that chat back on first.
+- Kept: the separate signing job in CI and the trimmed checksum workflow. `gradle/verification-metadata.xml` is back to the list for the old build tools.
 
 ### Project
 
 - **Checksum list regenerated without the old entries.** `gradle/verification-metadata.xml` was regenerated on CI with the fixed workflow and committed exactly as printed (its SHA-256 matches the log). It now lists only the 435 components the build downloads today; the leftovers from earlier library and build-tool versions are gone.
 - **The checksum list no longer collects old entries.** The hand-started workflow that regenerates `gradle/verification-metadata.xml` used to add the new checksums to the existing file, so entries for library versions that are no longer used stayed in it. It now clears the old entries first and writes only what the build uses. Nothing in the app changes.
+
 ## v2.2.1 (2026-11-21)
 
 Built and checked by CI only: not run on a phone when it was published.

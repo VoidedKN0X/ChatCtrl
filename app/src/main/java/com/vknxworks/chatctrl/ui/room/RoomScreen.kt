@@ -166,9 +166,6 @@ import com.vknxworks.chatctrl.Strings
 import com.vknxworks.chatctrl.R
 import com.vknxworks.chatctrl.ui.ScreenTopBar
 
-/** "@na" at the end of the text before the cursor. Compiled once, not on every typed letter. */
-private val MentionQuery = Regex("(^|\\s)@([^\\s@]*)$")
-
 private val QuickReactions = listOf("👍", "❤️", "😂", "😮", "😢", "🙏", "🎉", "👀")
 
 /** What the composer is doing besides a plain new message. */
@@ -982,7 +979,7 @@ private fun Composer(
     // "@na" before the cursor offers matching members.
     val mentionQuery = remember(value) {
         val before = value.text.substring(0, value.selection.start.coerceIn(0, value.text.length))
-        MentionQuery.find(before)?.groupValues?.get(2)
+        Regex("(^|\\s)@([^\\s@]*)$").find(before)?.groupValues?.get(2)
     }
     val suggestions = remember(mentionQuery, members) {
         mentionQuery?.let { q ->

@@ -134,12 +134,9 @@ fun SearchScreen(session: MatrixSession, roomId: String, roomName: String?, onBa
     }
 }
 
-/** Compiled once: [highlight] runs for every result row. */
-private val Whitespace = Regex("\\s+")
-
 @Composable
 private fun highlight(text: String, query: String): AnnotatedString {
-    val words = query.split(Whitespace).filter { it.length >= 2 }
+    val words = query.split(Regex("\\s+")).filter { it.length >= 2 }
     val color = MaterialTheme.colorScheme.primary
     return buildAnnotatedString {
         append(text)

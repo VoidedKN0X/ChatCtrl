@@ -324,13 +324,7 @@ class MatrixSession(
             }
             if (notSyncingSince > 0 && now() - notSyncingSince > 45_000) reportStuck("not syncing for 45 s (state $state)")
             // Wait for something to change (state, foreground, network), re-checking regularly either way.
-            // Except when the app is away and the sync isn't running: nothing above goes by the clock then (the
-            // stop was already done or isn't needed, and every timer is for an active app), and everything that
-            // can change it (app active, a background job, the network, the sync state) sends a wake. So wait
-            // for that instead of waking every 5 seconds for nothing.
-            val parked = !active && state != SyncServiceState.RUNNING && state != SyncServiceState.OFFLINE
-            if (parked) syncWake.receive()
-            else kotlinx.coroutines.withTimeoutOrNull(if (active) 1_000L else 5_000L) { syncWake.receive() }
+            kotlinx.coroutines.withTimeoutOrNull(if (active) 1_000L else 5_000L) { syncWake.receive() }
         }
     }
 
@@ -351,28 +345,8 @@ class MatrixSession(
                 listUpdates.trySend(roomEntriesUpdate)
             }
         })
-        // One consumer keeps the updates in the order the SDK sent them. Updates that are already waiting are
-        // applied one after the other as before, but the list is shown once at the end instead of after each:
-        // during the first sync the SDK sends many small updates in a row.
-        scope.launch {
-            for (first in listUpdates) {
-                var batch = first
-                var shownAt = now()
-                try {
-                    while (true) {
-                        applyUpdates(batch)
-                        batch = listUpdates.tryReceive().getOrNull() ?: break
-                        // A long run of updates still fills the list as it goes.
-                        if (now() - shownAt >= 150) {
-                            publishRooms()
-                            shownAt = now()
-                        }
-                    }
-                } finally {
-                    publishRooms()
-                }
-            }
-        }
+        // One consumer keeps the updates in the order the SDK sent them.
+        scope.launch { for (batch in listUpdates) applyUpdates(batch) }
         listResult = result
         handles += result.entriesStream()
         val controller = result.controller()
@@ -389,17 +363,8 @@ class MatrixSession(
         runCatching { listController?.addOnePage() }
     }
 
-    /**
-     * The room list with every update applied so far. [_rooms] (what the screen shows) is the same list, except
-     * for a moment while more updates are waiting. Only read and written under [listMutex].
-     */
-    private var roomsNow: List<RoomSummary> = emptyList()
-
-    /** Shows [roomsNow]. */
-    private suspend fun publishRooms() = listMutex.withLock { _rooms.value = roomsNow }
-
     private suspend fun applyUpdates(updates: List<RoomListEntriesUpdate>) = listMutex.withLock {
-        val list = roomsNow.toMutableList()
+        val list = _rooms.value.toMutableList()
         for (u in updates) {
             when (u) {
                 is RoomListEntriesUpdate.Append -> list.addAll(u.values.map { it.summary() })
@@ -415,7 +380,7 @@ class MatrixSession(
                 RoomListEntriesUpdate.Clear -> list.clear()
             }
         }
-        roomsNow = list.distinctBy { it.roomId }
+        _rooms.value = list.distinctBy { it.roomId }
     }
 
     private suspend fun Room.summary(): RoomSummary = use { it.toSummary() }
@@ -425,8 +390,7 @@ class MatrixSession(
         scope.launch {
             val fresh = getRoom(roomId)?.summary() ?: return@launch
             listMutex.withLock {
-                roomsNow = roomsNow.map { if (it.roomId == roomId) fresh else it }
-                _rooms.value = roomsNow
+                _rooms.value = _rooms.value.map { if (it.roomId == roomId) fresh else it }
             }
         }
     }
