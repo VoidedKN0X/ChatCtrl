@@ -1033,4 +1033,35 @@
     <string name="spaces_load_failed">Couldn\'t load this space</string>
     <string name="spaces_empty">This space has no rooms yet.</string>
     <string name="spaces_contents_footer">Tap a room you\'re in to open it, or a space you\'re in to look inside. Join adds a room to your chats.</string>
+    <!-- Live location -->
+    <string name="live_location_share">Share live location</string>
+    <string name="live_location_share_title">Share your live location?</string>
+    <string name="live_location_share_explain">Everyone in this chat sees where you are, updated about every 15 seconds, until the time runs out or you stop. ChatCtrl shows a notification with a Stop button while it shares, also when it is in the background. In an encrypted chat your positions are encrypted; that you are sharing and until when is not.</string>
+    <plurals name="live_location_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <plurals name="live_location_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <string name="live_location_until_updated">Live until %1$s · updated %2$s</string>
+    <string name="live_location_until_waiting">Live until %1$s · waiting for the first position</string>
+    <string name="live_location_ended_last">Live location ended · last position %1$s</string>
+    <string name="live_location_ended">Live location ended</string>
+    <string name="live_location_stop_sharing">Stop sharing</string>
+    <string name="live_location_no_position">No position has come in yet</string>
+    <string name="live_location_start_failed">Couldn\'t start sharing your live location: %1$s</string>
+    <string name="live_location_not_signed_in">not signed in</string>
+    <string name="live_location_no_room">this chat isn\'t available</string>
+    <string name="live_location_no_foreground">Android didn\'t allow it right now. Try again with the chat open.</string>
+    <string name="live_location_stop_failed">Couldn\'t tell the chat that you stopped sharing. Your location is no longer sent, and the share ends by itself at its end time.</string>
+    <string name="channel_live_location">Live location</string>
+    <string name="live_location_notification_title">Sharing your live location</string>
+    <string name="live_location_notification_starting">Starting…</string>
+    <plurals name="live_location_notification_text">
+        <item quantity="one">In %1$d chat · until %2$s</item>
+        <item quantity="other">In %1$d chats · until %2$s</item>
+    </plurals>
+    <string name="live_location_stop">Stop</string>
 </resources>

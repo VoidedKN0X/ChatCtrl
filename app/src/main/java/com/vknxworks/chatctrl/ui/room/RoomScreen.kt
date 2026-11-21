@@ -250,6 +250,8 @@ fun RoomScreen(
     var creatingPoll by remember { mutableStateOf(false) }
     var pickingLocation by remember { mutableStateOf(false) }
     var viewingLocation by remember { mutableStateOf<UiContent.Location?>(null) }
+    /** The timeline row of the location on the map, so a live location's map follows its new positions. */
+    var viewingLocationKey by remember { mutableStateOf<String?>(null) }
     var pendingAttachment by remember { mutableStateOf<Uri?>(null) }
     var pendingAttachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var pickingSticker by remember { mutableStateOf(false) }
@@ -430,7 +432,7 @@ fun RoomScreen(
         MessageActions(
             onLongPress = { sheetFor = it },
             onReact = { item, key -> timeline.toggleReaction(item, key) },
-            onOpenMedia = { item -> openMedia(context, session, item, onOpenImage, scope, snackbar, onOpenLocation = { viewingLocation = it }) },
+            onOpenMedia = { item -> openMedia(context, session, item, onOpenImage, scope, snackbar, onOpenLocation = { viewingLocation = it; viewingLocationKey = item.key }) },
             onOpenUser = onOpenUser,
             onOpenThread = { item -> item.eventId?.let(onOpenThread) },
             onJumpToReply = { jumpTo(it) },
@@ -451,6 +453,7 @@ fun RoomScreen(
             showReceipts = showReadReceipts,
             member = { id -> members.firstOrNull { it.userId == id } },
             onShowReceipts = { receiptsFor = it },
+            onStopLiveLocation = { com.vknxworks.chatctrl.location.LiveLocation.stopFromUi(roomId) },
             onSwipeReply = if (permissions.canSend && header?.membership == Membership.JOINED) { item -> mode = ComposerMode.Reply(item) } else null,
         )
     }
@@ -1016,15 +1019,40 @@ fun RoomScreen(
                 mode = ComposerMode.Normal
                 followLatest = true
             },
+            // Live location goes to the chat itself, so it isn't offered inside a thread.
+            onShareLive = if (threadRootId == null) { ms ->
+                pickingLocation = false
+                com.vknxworks.chatctrl.location.LiveLocation.start(context, roomId, ms)
+                followLatest = true
+            } else null,
         )
     }
 
-    viewingLocation?.let { loc ->
+    viewingLocation?.let { opened ->
+        // A live location keeps moving: show its newest position while the map is open.
+        val loc = viewingLocationKey?.let { k ->
+            ((entries.firstOrNull { it.key == k } as? TimelineEntry.Message)?.content as? UiContent.Location)
+                ?.takeIf { it.live != null && com.vknxworks.chatctrl.ui.location.parseGeoUri(it.geoUri) != null }
+        } ?: opened
+        val live = loc.live
         com.vknxworks.chatctrl.ui.location.LocationViewerDialog(
-            title = loc.description ?: stringResource(R.string.location_3),
+            title = loc.description ?: stringResource(if (live != null) R.string.live_location_2 else R.string.location_3),
             geoUri = loc.geoUri,
-            onDismiss = { viewingLocation = null },
+            onDismiss = { viewingLocation = null; viewingLocationKey = null },
+            note = live?.let { l ->
+                if (l.isLiveAt(System.currentTimeMillis())) {
+                    l.lastTs?.let { stringResource(R.string.live_location_until_updated, com.vknxworks.chatctrl.ui.timeOfDay(l.endsAt), com.vknxworks.chatctrl.ui.timeOfDay(it)) }
+                        ?: stringResource(R.string.live_location_until_waiting, com.vknxworks.chatctrl.ui.timeOfDay(l.endsAt))
+                } else {
+                    l.lastTs?.let { stringResource(R.string.live_location_ended_last, com.vknxworks.chatctrl.ui.timeOfDay(it)) } ?: stringResource(R.string.live_location_ended)
+                }
+            },
         )
+    }
+
+    // Problems while starting or stopping a live location share.
+    LaunchedEffect(Unit) {
+        com.vknxworks.chatctrl.location.LiveLocation.errors.collect { snackbar.showSnackbar(it) }
     }
 
     if (creatingPoll) {
@@ -1048,7 +1076,7 @@ private fun displayNameOf(context: android.content.Context, uri: Uri): String = 
 private fun UiContent.canForward(): Boolean = when (this) {
     is UiContent.Text, is UiContent.Video, is UiContent.Audio, is UiContent.File -> true
     is UiContent.Image -> !isSticker
-    is UiContent.Location -> geoUri.isNotBlank() && body != Strings.str(R.string.live_location_2)
+    is UiContent.Location -> geoUri.isNotBlank() && live == null
     else -> false
 }
 
@@ -1350,7 +1378,9 @@ internal fun openMedia(
     when (val c = item.content) {
         is UiContent.Image -> onOpenImage(MediaRequest(c.sourceJson, c.filename, c.mime, c.caption))
         // Shown on an OpenStreetMap map inside the app; only coordinates are read from the sender's URI.
-        is UiContent.Location -> if (onOpenLocation != null && com.vknxworks.chatctrl.ui.location.parseGeoUri(c.geoUri) != null) onOpenLocation(c) else {
+        is UiContent.Location -> if (onOpenLocation != null && com.vknxworks.chatctrl.ui.location.parseGeoUri(c.geoUri) != null) onOpenLocation(c)
+        else if (c.live != null && c.geoUri.isBlank()) scope.launch { snackbar.showSnackbar(Strings.str(R.string.live_location_no_position)) }
+        else {
             // The URI comes from someone else's event: only ever open it as a map location.
             val geo = runCatching { Uri.parse(c.geoUri.trim()) }.getOrNull()?.takeIf { it.scheme.equals("geo", ignoreCase = true) }
             if (geo == null) {

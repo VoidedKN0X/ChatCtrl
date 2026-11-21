@@ -274,7 +274,15 @@ class TimelineController(
                     }
                     is MsgLikeKind.Redacted -> UiContent.Redacted
                     is MsgLikeKind.UnableToDecrypt -> utdContent(kind.msg)
-                    is MsgLikeKind.LiveLocation -> UiContent.Location(Strings.str(R.string.live_location_2), kind.content.locations.lastOrNull()?.geoUri ?: "")
+                    is MsgLikeKind.LiveLocation -> kind.content.let { live ->
+                        val last = live.locations.lastOrNull()
+                        UiContent.Location(
+                            body = Strings.str(R.string.live_location_2),
+                            geoUri = last?.geoUri ?: "",
+                            description = live.description?.takeIf { it.isNotBlank() },
+                            live = LiveShare(live.ts.toLong(), live.timeoutMs.toLong(), live.isLive, last?.ts?.toLong()),
+                        )
+                    }
                     is MsgLikeKind.Other -> UiContent.Unsupported(Strings.str(R.string.unsupported_event))
                 }
             }

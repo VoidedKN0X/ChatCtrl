@@ -966,4 +966,35 @@
     <string name="spaces_load_failed">Deze space kon niet worden geladen</string>
     <string name="spaces_empty">Deze space heeft nog geen kamers.</string>
     <string name="spaces_contents_footer">Tik op een kamer waar je lid van bent om ze te openen, of op een space waar je lid van bent om erin te kijken. Met Lid worden komt een kamer bij je chats.</string>
+    <!-- Live location -->
+    <string name="live_location_share">Livelocatie delen</string>
+    <string name="live_location_share_title">Je livelocatie delen?</string>
+    <string name="live_location_share_explain">Iedereen in deze chat ziet waar je bent, ongeveer elke 15 seconden bijgewerkt, tot de tijd om is of je stopt. Zolang ChatCtrl deelt, staat er een melding met een Stop-knop, ook als de app op de achtergrond is. In een versleutelde chat zijn je posities versleuteld; dát je deelt en tot wanneer, niet.</string>
+    <plurals name="live_location_minutes">
+        <item quantity="one">%1$d minuut</item>
+        <item quantity="other">%1$d minuten</item>
+    </plurals>
+    <plurals name="live_location_hours">
+        <item quantity="one">%1$d uur</item>
+        <item quantity="other">%1$d uur</item>
+    </plurals>
+    <string name="live_location_until_updated">Live tot %1$s · bijgewerkt %2$s</string>
+    <string name="live_location_until_waiting">Live tot %1$s · wacht op de eerste positie</string>
+    <string name="live_location_ended_last">Livelocatie gestopt · laatste positie %1$s</string>
+    <string name="live_location_ended">Livelocatie gestopt</string>
+    <string name="live_location_stop_sharing">Stoppen met delen</string>
+    <string name="live_location_no_position">Er is nog geen positie binnengekomen</string>
+    <string name="live_location_start_failed">Kon je livelocatie niet beginnen delen: %1$s</string>
+    <string name="live_location_not_signed_in">niet aangemeld</string>
+    <string name="live_location_no_room">deze chat is niet beschikbaar</string>
+    <string name="live_location_no_foreground">Android liet het nu niet toe. Probeer opnieuw met de chat open.</string>
+    <string name="live_location_stop_failed">Kon de chat niet laten weten dat je gestopt bent met delen. Je locatie wordt niet meer verstuurd, en het delen stopt vanzelf op het eindtijdstip.</string>
+    <string name="channel_live_location">Livelocatie</string>
+    <string name="live_location_notification_title">Je livelocatie wordt gedeeld</string>
+    <string name="live_location_notification_starting">Bezig met starten…</string>
+    <plurals name="live_location_notification_text">
+        <item quantity="one">In %1$d chat · tot %2$s</item>
+        <item quantity="other">In %1$d chats · tot %2$s</item>
+    </plurals>
+    <string name="live_location_stop">Stop</string>
 </resources>

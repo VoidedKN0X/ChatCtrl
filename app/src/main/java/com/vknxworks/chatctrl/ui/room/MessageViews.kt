@@ -61,6 +61,8 @@ import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.LocationOff
+import androidx.compose.material.icons.outlined.MyLocation
 import com.vknxworks.chatctrl.ui.location.display
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Shield
@@ -140,6 +142,8 @@ class MessageActions(
     /** Name and picture for a user ID, from the room's member list. */
     val member: (String) -> com.vknxworks.chatctrl.matrix.MemberInfo? = { null },
     val onShowReceipts: (TimelineEntry.Message) -> Unit = {},
+    /** "Stop sharing" on your own live location that is still running. */
+    val onStopLiveLocation: (TimelineEntry.Message) -> Unit = {},
 )
 
 /** The accent for details inside a bubble: the accent itself, or the bubble's text colour on an accent bubble. */
@@ -539,7 +543,7 @@ private fun MessageBody(item: TimelineEntry.Message, onBubble: Color, bigEmoji: 
             onBubble = onBubble,
             caption = c.caption,
         )
-        is UiContent.Location -> AttachmentRow(
+        is UiContent.Location -> if (c.live != null) LiveLocationRow(item, c, c.live, onBubble, actions) else AttachmentRow(
             Icons.Outlined.Place,
             c.description ?: stringResource(R.string.location_3),
             com.vknxworks.chatctrl.ui.location.parseGeoUri(c.geoUri)?.let { "${it.display()} · ${stringResource(R.string.location_tap_to_view)}" }
@@ -591,6 +595,48 @@ private fun AttachmentRow(icon: androidx.compose.ui.graphics.vector.ImageVector,
             }
         }
         caption?.takeIf { it.isNotBlank() }?.let { Text(formatText(it, null), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+    }
+}
+
+/**
+ * A live location share: whether it is still running and until when, when the latest position came in, and for your
+ * own running share a "Stop sharing" button. Tap opens the latest position on the map.
+ */
+@Composable
+private fun LiveLocationRow(
+    item: TimelineEntry.Message,
+    c: UiContent.Location,
+    live: com.vknxworks.chatctrl.matrix.LiveShare,
+    onBubble: Color,
+    actions: MessageActions,
+) {
+    // Ticks while the share runs, so it turns into "ended" on time without a new event.
+    val now by androidx.compose.runtime.produceState(System.currentTimeMillis(), live.endsAt, live.liveFlag) {
+        while (live.liveFlag && value < live.endsAt) {
+            kotlinx.coroutines.delay((live.endsAt - value).coerceIn(1_000L, 30_000L))
+            value = System.currentTimeMillis()
+        }
+    }
+    val running = live.isLiveAt(now)
+    val status = when {
+        running && live.lastTs != null -> stringResource(R.string.live_location_until_updated, timeOfDay(live.endsAt), timeOfDay(live.lastTs))
+        running -> stringResource(R.string.live_location_until_waiting, timeOfDay(live.endsAt))
+        live.lastTs != null -> stringResource(R.string.live_location_ended_last, timeOfDay(live.lastTs))
+        else -> stringResource(R.string.live_location_ended)
+    }
+    Column {
+        AttachmentRow(
+            if (running) Icons.Outlined.MyLocation else Icons.Outlined.LocationOff,
+            c.description ?: stringResource(R.string.live_location_2),
+            status,
+            onBubble,
+            null,
+        )
+        if (running && item.isOwn && item.eventId != null) {
+            TextButton(onClick = { actions.onStopLiveLocation(item) }, modifier = Modifier.padding(start = 4.dp)) {
+                Text(stringResource(R.string.live_location_stop_sharing), color = accentOn(onBubble))
+            }
+        }
     }
 }
 

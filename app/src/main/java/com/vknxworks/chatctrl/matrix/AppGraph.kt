@@ -149,6 +149,11 @@ class AppGraph(val context: Context) {
             com.vknxworks.chatctrl.call.CallManager.sealWhenCallEnds = true
             return
         }
+        // Sharing a live location keeps the session too, until the sharing ends (LiveLocationService).
+        if (com.vknxworks.chatctrl.location.LiveLocation.active) {
+            com.vknxworks.chatctrl.location.LiveLocation.sealWhenDone = true
+            return
+        }
         scope.launch {
             mutex.withLock {
                 val s = session ?: return@withLock
@@ -250,6 +255,9 @@ class AppGraph(val context: Context) {
     /** Signs out on the server, then wipes this device's copy of the account. */
     suspend fun signOut() {
         val s = session ?: return
+        // Live location shares are stopped first, while the session can still tell the chats.
+        runCatching { com.vknxworks.chatctrl.location.LiveLocation.stopAll() }
+        com.vknxworks.chatctrl.location.LiveLocation.clearLocal()
         com.vknxworks.chatctrl.notify.Push.disable(context, s)
         s.logout()
         wipe(s)
@@ -258,6 +266,7 @@ class AppGraph(val context: Context) {
 
     private suspend fun forgetSession(message: String?) {
         val s = session ?: return
+        com.vknxworks.chatctrl.location.LiveLocation.clearLocal()
         // The token is already dead, so the pusher can't be removed on the server; drop the local registration.
         runCatching { com.vknxworks.chatctrl.notify.Push.disable(context, null) }
         // Stop syncing first, so nothing writes new files into the folders that are about to be deleted.

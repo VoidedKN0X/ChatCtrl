@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.ShareLocation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -157,14 +158,14 @@ private fun OsmCredit(modifier: Modifier) {
  * service. Before sending, a preview shows the spot and takes an optional description.
  */
 @Composable
-fun LocationPickerDialog(onDismiss: () -> Unit, onSend: (LocationToSend) -> Unit) {
+fun LocationPickerDialog(onDismiss: () -> Unit, onSend: (LocationToSend) -> Unit, onShareLive: ((Long) -> Unit)? = null) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        LocationPicker(onDismiss, onSend)
+        LocationPicker(onDismiss, onSend, onShareLive)
     }
 }
 
 @Composable
-private fun LocationPicker(onDismiss: () -> Unit, onSend: (LocationToSend) -> Unit) {
+private fun LocationPicker(onDismiss: () -> Unit, onSend: (LocationToSend) -> Unit, onShareLive: ((Long) -> Unit)?) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
@@ -216,12 +217,22 @@ private fun LocationPicker(onDismiss: () -> Unit, onSend: (LocationToSend) -> Un
     }
 
     var pendingSend by remember { mutableStateOf(false) }
+    var pendingLive by remember { mutableStateOf(false) }
+    var choosingLive by remember { mutableStateOf(false) }
+
+    fun chooseLive() {
+        if (Locator.isOff(context)) scope.launch { snackbar.showSnackbar(Strings.str(R.string.location_off)) }
+        else choosingLive = true
+    }
+
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         askedOnce = true
         precise = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || Locator.hasPrecise(context)
+        val live = pendingLive
+        pendingLive = false
         if (Locator.hasAny(context)) {
             if (!precise) scope.launch { snackbar.showSnackbar(Strings.str(R.string.location_approximate_only)) }
-            locate(pendingSend)
+            if (live) chooseLive() else locate(pendingSend)
         } else {
             scope.launch { snackbar.showSnackbar(Strings.str(R.string.location_permission_denied)) }
         }
@@ -234,6 +245,16 @@ private fun LocationPicker(onDismiss: () -> Unit, onSend: (LocationToSend) -> Un
             locate(thenSend)
         } else {
             pendingSend = thenSend
+            com.vknxworks.chatctrl.ui.lock.AppLock.expectReturn()
+            askPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
+
+    fun liveLocation() {
+        if (Locator.hasPrecise(context) || (Locator.hasAny(context) && askedOnce)) {
+            chooseLive()
+        } else {
+            pendingLive = true
             com.vknxworks.chatctrl.ui.lock.AppLock.expectReturn()
             askPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
@@ -299,9 +320,39 @@ private fun LocationPicker(onDismiss: () -> Unit, onSend: (LocationToSend) -> Un
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.location_send_pin))
                 }
+                if (onShareLive != null) {
+                    CtrlSecondaryButton(onClick = { liveLocation() }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.ShareLocation, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.live_location_share))
+                    }
+                }
                 Text(stringResource(R.string.location_picker_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+    }
+
+    if (choosingLive && onShareLive != null) {
+        CtrlDialog(
+            onDismissRequest = { choosingLive = false },
+            title = { Text(stringResource(R.string.live_location_share_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.live_location_share_explain), style = MaterialTheme.typography.bodyMedium)
+                    com.vknxworks.chatctrl.location.LiveLocation.DURATIONS_MS.forEach { ms ->
+                        CtrlSecondaryButton(
+                            onClick = {
+                                choosingLive = false
+                                onShareLive(ms)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text(liveDurationLabel(ms)) }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { choosingLive = false }) { Text(stringResource(R.string.lock_cancel)) } },
+        )
     }
 
     preview?.let { p ->
@@ -331,6 +382,14 @@ private fun LocationPicker(onDismiss: () -> Unit, onSend: (LocationToSend) -> Un
             dismissButton = { TextButton(onClick = { preview = null }) { Text(stringResource(R.string.lock_cancel)) } },
         )
     }
+}
+
+/** "15 minutes", "1 hour", "8 hours". */
+@Composable
+private fun liveDurationLabel(ms: Long): String {
+    val minutes = (ms / 60_000L).toInt()
+    return if (minutes < 60) androidx.compose.ui.res.pluralStringResource(R.plurals.live_location_minutes, minutes, minutes)
+    else androidx.compose.ui.res.pluralStringResource(R.plurals.live_location_hours, minutes / 60, minutes / 60)
 }
 
 /** A small, still map with a pin, for previews. */
@@ -369,7 +428,7 @@ private fun pinMarker(map: MapView, point: GeoPoint, color: Int) = Marker(map).a
  * copy) and "Open in maps app" for directions in another app.
  */
 @Composable
-fun LocationViewerDialog(title: String, geoUri: String, onDismiss: () -> Unit) {
+fun LocationViewerDialog(title: String, geoUri: String, onDismiss: () -> Unit, note: String? = null) {
     val spot = remember(geoUri) { parseGeoUri(geoUri) }
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
@@ -383,7 +442,9 @@ fun LocationViewerDialog(title: String, geoUri: String, onDismiss: () -> Unit) {
         val point = remember(spot) { GeoPoint(spot.lat, spot.lon) }
         val map = rememberMap(point, 16.0)
         val accent = CtrlColors.Accent.toArgb()
-        LaunchedEffect(map) {
+        // A live location's newest position moves the pin (the map itself stays where you put it).
+        LaunchedEffect(map, point) {
+            map.overlays.removeAll { it is Marker }
             map.overlays.add(pinMarker(map, point, accent))
             map.invalidate()
         }
@@ -416,6 +477,7 @@ fun LocationViewerDialog(title: String, geoUri: String, onDismiss: () -> Unit) {
                         }
                     }
                     spot.accuracy?.let { Text(stringResource(R.string.location_accuracy, it.toInt()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     CtrlButton(
                         onClick = {
                             // Only the coordinates go to the other app, never the rest of the sender's URI.

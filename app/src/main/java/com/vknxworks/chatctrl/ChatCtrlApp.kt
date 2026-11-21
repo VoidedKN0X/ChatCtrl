@@ -57,6 +57,7 @@ class ChatCtrlApp : Application(), SingletonImageLoader.Factory {
         graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { graph.prefs.encryptRecentServers() } }
         Notifier.createChannels(this)
         com.vknxworks.chatctrl.call.CallNotifications.createChannels(this)
+        com.vknxworks.chatctrl.location.LiveLocationService.createChannel(this)
         graph.boot()
 
         // Sync while the app is open; the background worker takes over (if enabled) when it isn't.

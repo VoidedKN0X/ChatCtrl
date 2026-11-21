@@ -28,12 +28,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- Live location: keeps sending your position while you share it and ChatCtrl is in the background. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <!-- Lets the ongoing call use the "phone call" foreground service type (no Telecom/phone access). -->
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <!-- Full-screen ringing screen for incoming calls. -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <!-- "Send my current location" in a chat, read once from Android's own location service when you ask for it.
-         Never used in the background. The camera above also scans QR codes to sign in or link a device. -->
+    <!-- "Send my current location" in a chat, read once from Android's own location service when you ask for it,
+         and "Share live location", which keeps reading it only while you share (foreground service with a
+         notification, started from the chat; no background location permission). The camera above also scans QR codes to sign in or link a device. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-feature android:name="android.hardware.location" android:required="false" />
@@ -120,6 +123,12 @@
         <receiver
             android:name=".call.CallActionReceiver"
             android:exported="false" />
+
+        <!-- Sharing your live location in a chat: runs only while you share, with a notification and a Stop button. -->
+        <service
+            android:name=".location.LiveLocationService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <!-- The system WebView used for calls never asks Google Safe Browsing about pages and sends no usage metrics. -->
         <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="false" />

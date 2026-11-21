@@ -85,7 +85,8 @@ sealed interface UiContent {
         val waveform: List<Float> = emptyList(),
     ) : UiContent
     data class File(val sourceJson: String, val filename: String, val mime: String, val size: Long, val caption: String?) : UiContent
-    data class Location(val body: String, val geoUri: String, val description: String? = null) : UiContent
+    /** A location; [live] is set for a live location share (its [geoUri] is then the latest position, or blank). */
+    data class Location(val body: String, val geoUri: String, val description: String? = null, val live: LiveShare? = null) : UiContent
     data class Poll(
         val question: String,
         val answers: List<PollAnswerUi>,
@@ -103,3 +104,13 @@ sealed interface UiContent {
 }
 
 enum class TextKind { TEXT, NOTICE, EMOTE }
+
+/**
+ * A live location share (MSC3489): when it started, how long it runs, whether its sender still marks it as live,
+ * and when the latest position came in (null before the first one).
+ */
+data class LiveShare(val startTs: Long, val timeoutMs: Long, val liveFlag: Boolean, val lastTs: Long?) {
+    val endsAt: Long get() = startTs + timeoutMs
+    /** Still running at [now]: not stopped by its sender and not past its end time. */
+    fun isLiveAt(now: Long): Boolean = liveFlag && now < endsAt
+}
