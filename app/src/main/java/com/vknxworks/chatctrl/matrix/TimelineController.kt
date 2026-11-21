@@ -301,7 +301,7 @@ class TimelineController(
             is EventSendState.SendingFailed -> {
                 e.lazyProvider.getSendHandle()?.let { failedHandles[key] = it }
                 // The reason the SDK gives, shown under the message so a failed send can be explained.
-                sendError = (s.error.toString() + if (s.isRecoverable) " (will retry)" else "").take(400)
+                sendError = (s.error.toString() + if (s.isRecoverable) " " + Strings.str(R.string.send_error_will_retry) else "").take(400)
                 // The connection log gets only the kind of error: no names, rooms or servers.
                 if (loggedFailures.add(key)) {
                     ConnectionLog.log("send failed: ${s.error::class.simpleName}, ${if (s.isRecoverable) "recoverable" else "not recoverable"}")

@@ -142,10 +142,26 @@ fun HomeScreen(
     var menuFor by remember { mutableStateOf<RoomSummary?>(null) }
     var leaving by remember { mutableStateOf<RoomSummary?>(null) }
 
-    val visible = remember(rooms, filter, query) {
+    // Spaces: pick one to see only its chats. Read again when the number of rooms changes (a join or a leave).
+    val spaceBrowser = remember(session) { com.vknxworks.chatctrl.matrix.SpaceBrowser(session) }
+    var spaces by remember { mutableStateOf<List<com.vknxworks.chatctrl.matrix.SpaceEntry>>(emptyList()) }
+    var spaceId by rememberSaveable { mutableStateOf<String?>(null) }
+    var pickingSpace by remember { mutableStateOf(false) }
+    var browsingSpace by remember { mutableStateOf<com.vknxworks.chatctrl.matrix.SpaceEntry?>(null) }
+    val hasSpaces = rooms.any { it.isSpace && !it.isInvite }
+    LaunchedEffect(loaded, rooms.size, hasSpaces) {
+        if (!loaded) return@LaunchedEffect
+        if (!hasSpaces) { spaces = emptyList(); return@LaunchedEffect }
+        runCatching { spaceBrowser.spaces() }.onSuccess { spaces = it }
+    }
+    val selectedSpace = spaces.firstOrNull { it.id == spaceId }
+
+    val visible = remember(rooms, filter, query, selectedSpace) {
         val q = query.trim().lowercase()
+        val inSpace = selectedSpace?.roomIds
         rooms.filter { r ->
-            !r.isSpace && (q.isEmpty() || q in r.searchText) && when (filter) {
+            // Spaces themselves aren't chats, but an invitation to one is shown so it can be accepted.
+            (!r.isSpace || r.isInvite) && (inSpace == null || r.roomId in inSpace) && (q.isEmpty() || q in r.searchText) && when (filter) {
                 RoomFilter.ALL -> true
                 RoomFilter.UNREAD -> r.hasUnread || r.isInvite
                 RoomFilter.PEOPLE -> r.isDm && !r.isInvite
@@ -357,6 +373,27 @@ fun HomeScreen(
                         contentPadding = PaddingValues(horizontal = Gutter, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        if (spaces.isNotEmpty()) {
+                            item("space") {
+                                FilterChip(
+                                    selected = selectedSpace != null,
+                                    onClick = { pickingSpace = true },
+                                    label = { Text(selectedSpace?.name ?: stringResource(R.string.spaces), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                    shape = CtrlShapes.Badge,
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        containerColor = CtrlColors.Surface,
+                                        labelColor = CtrlColors.Muted,
+                                        selectedContainerColor = CtrlColors.Accent,
+                                        selectedLabelColor = CtrlColors.OnAccent,
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(
+                                        enabled = true, selected = selectedSpace != null,
+                                        borderColor = CtrlColors.ControlBorder, selectedBorderColor = CtrlColors.Accent,
+                                        borderWidth = 1.dp, selectedBorderWidth = 1.dp,
+                                    ),
+                                )
+                            }
+                        }
                         items(RoomFilter.entries.filter { it != RoomFilter.INVITES || inviteCount > 0 }) { f ->
                             FilterChip(
                                 selected = filter == f,
@@ -382,8 +419,8 @@ fun HomeScreen(
                     item("empty") {
                         EmptyState(
                             Icons.AutoMirrored.Outlined.Chat,
-                            stringResource(if (query.isNotBlank() || filter != RoomFilter.ALL) R.string.chats_nothing else R.string.chats_empty),
-                            stringResource(if (query.isNotBlank() || filter != RoomFilter.ALL) R.string.chats_nothing_body else R.string.chats_empty_body),
+                            stringResource(if (query.isNotBlank() || filter != RoomFilter.ALL || selectedSpace != null) R.string.chats_nothing else R.string.chats_empty),
+                            stringResource(if (query.isNotBlank() || filter != RoomFilter.ALL || selectedSpace != null) R.string.chats_nothing_body else R.string.chats_empty_body),
                         )
                     }
                 } else if (!loaded && rooms.isEmpty()) {
@@ -418,6 +455,27 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    if (pickingSpace) {
+        val counts = remember(spaces, rooms) {
+            spaces.associate { sp -> sp.id to rooms.count { !it.isSpace && it.roomId in sp.roomIds } }
+        }
+        SpacesSheet(
+            spaces, spaceId, counts,
+            onDismiss = { pickingSpace = false },
+            onSelect = { spaceId = it; pickingSpace = false },
+            onBrowse = { pickingSpace = false; browsingSpace = it },
+        )
+    }
+    browsingSpace?.let { space ->
+        val joinedIds = remember(rooms) { rooms.filter { !it.isInvite }.map { it.roomId }.toSet() }
+        SpaceContentsSheet(
+            spaceBrowser, space, joinedIds,
+            onDismiss = { browsingSpace = null },
+            onOpenRoom = { browsingSpace = null; onOpenRoom(it) },
+            onOpenSpace = { browsingSpace = it },
+        )
     }
 
     menuFor?.let { room ->

@@ -932,6 +932,7 @@
     <string name="copy_send_error">Copy the reason it failed</string>
     <string name="send_error_label">Send error</string>
     <string name="send_error_copied">Reason copied</string>
+    <string name="send_error_will_retry">(will retry)</string>
 
     <!-- Old sessions -->
     <string name="sign_out_old_devices">Sign out old devices</string>
@@ -1020,4 +1021,16 @@
     <string name="stickers_too_big">That picture is too big for a sticker (2 MB at most)</string>
     <string name="stickers_remove_title">Remove this sticker?</string>
     <string name="stickers_remove_body">It\'s taken out of your own pack. Stickers you already sent stay visible.</string>
+
+    <!-- Spaces -->
+    <string name="spaces">Spaces</string>
+    <string name="spaces_all_chats">All chats</string>
+    <string name="spaces_browse">See what\'s in this space</string>
+    <string name="spaces_space_line">Space · %1$s</string>
+    <string name="spaces_joined">Joined</string>
+    <string name="spaces_join">Join</string>
+    <string name="spaces_join_failed">Couldn\'t join</string>
+    <string name="spaces_load_failed">Couldn\'t load this space</string>
+    <string name="spaces_empty">This space has no rooms yet.</string>
+    <string name="spaces_contents_footer">Tap a room you\'re in to open it, or a space you\'re in to look inside. Join adds a room to your chats.</string>
 </resources>

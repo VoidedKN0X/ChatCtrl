@@ -12,13 +12,17 @@ import com.vknxworks.chatctrl.R
 enum class ThemeMode { SYSTEM, LIGHT, DARK, BLACK }
 
 /** How messages are drawn in a chat. */
-enum class BubbleStyle(val label: String, val description: String) {
-    MODERN(Strings.str(R.string.modern), Strings.str(R.string.rounded_bubbles_with_a_small_tail)),
-    ROUND(Strings.str(R.string.round), Strings.str(R.string.fully_rounded_bubbles)),
-    SHARP(Strings.str(R.string.sharp), Strings.str(R.string.square_corners_compact)),
-    OUTLINED(Strings.str(R.string.outlined), Strings.str(R.string.bubbles_with_an_outline_instead_of_a)),
-    VIVID(Strings.str(R.string.vivid), Strings.str(R.string.your_messages_in_a_strong_accent)),
-    FLAT(Strings.str(R.string.no_bubbles), Strings.str(R.string.everything_on_the_left_with_names)),
+enum class BubbleStyle(private val labelRes: Int, private val descriptionRes: Int) {
+    MODERN(R.string.modern, R.string.rounded_bubbles_with_a_small_tail),
+    ROUND(R.string.round, R.string.fully_rounded_bubbles),
+    SHARP(R.string.sharp, R.string.square_corners_compact),
+    OUTLINED(R.string.outlined, R.string.bubbles_with_an_outline_instead_of_a),
+    VIVID(R.string.vivid, R.string.your_messages_in_a_strong_accent),
+    FLAT(R.string.no_bubbles, R.string.everything_on_the_left_with_names);
+
+    /** Read each time, so the name follows the phone's language without restarting the app. */
+    val label: String get() = Strings.str(labelRes)
+    val description: String get() = Strings.str(descriptionRes)
 }
 
 /** App-level settings that are not tied to the Matrix account. */

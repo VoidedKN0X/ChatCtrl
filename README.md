@@ -29,6 +29,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Link previews and drafts** for every chat
 - **Send a location** (where you are or a dropped pin) and see received locations on an **OpenStreetMap** map, using Android's own location service
 - **Create rooms**, start direct chats, explore public rooms, and manage members and moderation
+- **Spaces**: show only one space's chats in the chat list, see what's in a space and join its rooms
 - **Share to ChatCtrl** from other apps, several pictures or files at once too, and **forward** a message to another chat
 - **Verified devices only**: an optional strict mode that only shares message keys with devices their owner has verified
 - **Device list**: rename your signed-in sessions, sign them out, or sign out every session you haven't used for a while in one go
@@ -112,7 +113,7 @@ See [Privacy](#privacy) for everything ChatCtrl connects to.
 - **Self-hosted ntfy:** your ntfy server's Matrix push gateway (`https://your-ntfy/_matrix/push/v1/notify`, built into ntfy) is used for every push, so your Matrix server must be able to reach it, and the ntfy server needs `base-url` set in its config. ntfy.sh works too. If the gateway can't be found, *Settings › Notifications* shows an error; no other gateway is ever used.
 - **What a push contains:** only the room and message IDs and an unread count, never the message, sender or room name. ChatCtrl then fetches and decrypts the message itself from your homeserver. Your homeserver sends the push to the Matrix gateway of your own ntfy server, which passes it to ntfy on your phone.
 - **Just your domain doesn't work?** Make sure `https://yourdomain/.well-known/matrix/client` points to your server, or enter the full server address.
-- **Not included yet:** spaces, live location, QR code verification (not in the Matrix Rust SDK yet) and multiple accounts at once.
+- **Not included yet:** creating and editing spaces, live location, QR code verification (not in the Matrix Rust SDK yet) and multiple accounts at once.
 
 ## Calls
 
