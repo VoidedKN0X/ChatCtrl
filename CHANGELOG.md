@@ -6,6 +6,10 @@ To publish a new version: bump `versionCode` and `versionName` in `app/build.gra
 
 Built and checked by CI only: nothing here had been run on a phone when it was pushed.
 
+### Fixed
+
+- **Fixed before release: the app would have crashed at start with the new build tools.** ChatCtrl uses WorkManager for its background work, and WorkManager stores its jobs in a small Room database that is created by name when the app starts. The shrinker (R8) in Android Gradle Plugin 9 is stricter than the old one and removed the constructor that needs, which makes the app stop right at launch (a known problem with Room 2.6.1 under Android Gradle Plugin 9). A keep rule for that constructor, the same one newer Room versions ship themselves, is now in `app/proguard-rules.pro`. No released version was affected: the new build tools have not been in any release. Built by CI only; not yet run on a phone.
+
 ### Faster
 
 - **Starting the app does a little less before the first frame.** The small index behind the "Draft: …" lines in the chat list is stored encrypted, and it was read and decrypted (a call into the phone's secure key storage) on the main thread while the app started, before anything was drawn, also when the app was only started in the background for a notification. It is now read in the background right after the start. The chat list shows its draft lines as soon as the index is in, which is long before the list itself is there. Nothing can be lost by this: saving a draft line always waits for the index first, and signing out still clears it.
