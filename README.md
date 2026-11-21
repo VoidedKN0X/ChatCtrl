@@ -36,6 +36,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Back up and restore settings** to a file: the app's own settings only, never your sign-in, keys or PIN
 - **App lock** with its own PIN and optional fingerprint unlock; your saved sign-in stays encrypted while the app is locked (with notifications off)
 - **Hide in screenshots** and **Hide in recent apps**, two separate switches, both off by default
+- **English and Dutch**, following the phone's language
 - **The Ctrl series layout**: **Chats** and **Explore** tabs on a floating glass tab bar (a side rail on tablets), and your profile picture at the top right opens the **You** page with your account, **Settings** and **About**
 - Two-pane layout on tablets and foldables
 
