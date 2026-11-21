@@ -31,7 +31,12 @@ data class SessionPaths(val directory: String, val dataDir: File, val cacheDir: 
 }
 
 /** Builds Rust SDK clients configured the way Element X configures them. */
-class ClientFactory(private val context: Context, private val store: SessionStore) {
+class ClientFactory(
+    private val context: Context,
+    private val store: SessionStore,
+    /** "Verified devices only" (Settings): read each time a client is built. */
+    private val verifiedDevicesOnly: () -> Boolean = { false },
+) {
 
     fun newPaths(): SessionPaths {
         val dir = UUID.randomUUID().toString()
@@ -53,6 +58,7 @@ class ClientFactory(private val context: Context, private val store: SessionStor
         val store = SqliteStoreBuilder(paths.dataDir.absolutePath, paths.cacheDir.absolutePath)
             .key(Base64.decode(paths.key, Base64.NO_WRAP))
             .journalSizeLimit(25u * 1024u * 1024u)
+        val strict = verifiedDevicesOnly()
         return ClientBuilder()
             .sqliteStore(store)
             .setSessionDelegate(delegate)
@@ -63,8 +69,16 @@ class ClientFactory(private val context: Context, private val store: SessionStor
             // when it was sent), fetch that key from the key backup straight away, as Element X does.
             .backupDownloadStrategy(uniffi.matrix_sdk.BackupDownloadStrategy.AFTER_DECRYPTION_FAILURE)
             .autoEnableCrossSigning(true)
-            .roomKeyRecipientStrategy(CollectStrategy.ERROR_ON_VERIFIED_USER_PROBLEM)
-            .decryptionSettings(DecryptionSettings(senderDeviceTrustRequirement = TrustRequirement.UNTRUSTED))
+            // Normal: keys go to every device, and sending stops with an error when a verified person has an
+            // unverified device or a changed identity. Strict ("Verified devices only", what Element X calls
+            // excluding insecure devices, MSC4153): keys only go to devices signed by their owner, and messages
+            // from devices that aren't signed are not decrypted (older sessions without trust data still are).
+            .roomKeyRecipientStrategy(if (strict) CollectStrategy.IDENTITY_BASED_STRATEGY else CollectStrategy.ERROR_ON_VERIFIED_USER_PROBLEM)
+            .decryptionSettings(
+                DecryptionSettings(
+                    senderDeviceTrustRequirement = if (strict) TrustRequirement.CROSS_SIGNED_OR_LEGACY else TrustRequirement.UNTRUSTED,
+                )
+            )
             .enableShareHistoryOnInvite(true)
             .threadsEnabled(true, threadSubscriptions = false)
             .dmRoomDefinition(DmRoomDefinition.TWO_MEMBERS)

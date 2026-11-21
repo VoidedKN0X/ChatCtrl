@@ -73,6 +73,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Forward
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.AddReaction
@@ -162,6 +163,7 @@ import com.vknxworks.chatctrl.ui.shareText
 import kotlinx.coroutines.launch
 import org.matrix.rustcomponents.sdk.Membership
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import com.vknxworks.chatctrl.Strings
 import com.vknxworks.chatctrl.R
 import com.vknxworks.chatctrl.ui.ScreenTopBar
@@ -248,9 +250,12 @@ fun RoomScreen(
     var pickingLocation by remember { mutableStateOf(false) }
     var viewingLocation by remember { mutableStateOf<UiContent.Location?>(null) }
     var pendingAttachment by remember { mutableStateOf<Uri?>(null) }
+    var pendingAttachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var suspiciousLink by remember { mutableStateOf<Pair<String, String>?>(null) }
     var highlighted by remember { mutableStateOf<String?>(null) }
     var emojiPickerFor by remember { mutableStateOf<TimelineEntry.Message?>(null) }
+    var forwarding by remember { mutableStateOf<TimelineEntry.Message?>(null) }
+    var forwardTarget by remember { mutableStateOf<Pair<TimelineEntry.Message, com.vknxworks.chatctrl.matrix.RoomSummary>?>(null) }
     // Quick reactions: what you used recently first, then the defaults.
     var recentEmojis by remember { mutableStateOf<List<String>>(emptyList()) }
     LaunchedEffect(sheetFor != null) { if (sheetFor != null) recentEmojis = timeline.recentEmojis() }
@@ -316,7 +321,8 @@ fun RoomScreen(
         DeepLinks.share.value?.let { shared ->
             DeepLinks.share.value = null
             shared.text?.let { composer = TextFieldValue(it, TextRange(it.length)) }
-            shared.uri?.takeIf { com.vknxworks.chatctrl.ui.isForeignContentUri(context, it) }?.let { pendingAttachment = it }
+            val files = shared.uris.filter { com.vknxworks.chatctrl.ui.isForeignContentUri(context, it) }
+            if (files.size == 1) pendingAttachment = files.first() else if (files.size > 1) pendingAttachments = files
         }
     }
 
@@ -389,8 +395,13 @@ fun RoomScreen(
         }
     }
 
-    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let { pendingAttachment = it } }
-    val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { pendingAttachment = it } }
+    // One file opens the dialog with a caption; several are listed and sent one after the other.
+    fun picked(uris: List<Uri>) {
+        val files = uris.distinct().take(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)
+        if (files.size == 1) pendingAttachment = files.first() else if (files.size > 1) pendingAttachments = files
+    }
+    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)) { uris -> picked(uris) }
+    val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> picked(uris) }
 
     fun send() {
         val text = composer.text.trim()
@@ -741,6 +752,9 @@ fun RoomScreen(
             copyable?.takeIf { it.isNotBlank() }?.let { text ->
                 SettingRow(Icons.Outlined.ContentCopy, stringResource(R.string.copy_text)) { copyText(context, Strings.str(R.string.message), text, sensitive = true); sheetFor = null }
             }
+            if (item.eventId != null && item.status == SendStatus.SENT && item.content.canForward()) {
+                SettingRow(Icons.AutoMirrored.Outlined.Forward, stringResource(R.string.forward)) { forwarding = item; sheetFor = null }
+            }
             if (item.content is UiContent.Image || item.content is UiContent.Video || item.content is UiContent.File || item.content is UiContent.Audio) {
                 SettingRow(Icons.Outlined.Download, stringResource(R.string.save_to_downloads)) {
                     sheetFor = null
@@ -811,6 +825,29 @@ fun RoomScreen(
                 }
             }
         }
+    }
+
+    forwarding?.let { item ->
+        ChatPickerSheet(session, stringResource(R.string.forward_to), onDismiss = { forwarding = null }) { target ->
+            forwarding = null
+            forwardTarget = item to target
+        }
+    }
+    forwardTarget?.let { (item, target) ->
+        ConfirmDialog(
+            stringResource(R.string.forward_confirm_title, target.name),
+            stringResource(if (target.isEncrypted) R.string.forward_confirm_body else R.string.forward_confirm_body_plain),
+            stringResource(R.string.forward),
+            onDismiss = { forwardTarget = null },
+            onConfirm = {
+                val id = item.eventId
+                if (id != null) scope.launch {
+                    runCatching { timeline.forward(id, target.roomId) }
+                        .onSuccess { snackbar.showSnackbar(Strings.str(R.string.forwarded_to, target.name)) }
+                        .onFailure { snackbar.showSnackbar(it.userMessage().ifBlank { Strings.str(R.string.forward_failed) }) }
+                }
+            },
+        )
     }
 
     emojiPickerFor?.let { item ->
@@ -894,6 +931,33 @@ fun RoomScreen(
         )
     }
 
+    if (pendingAttachments.isNotEmpty()) {
+        val files = pendingAttachments
+        CtrlDialog(
+            onDismissRequest = { pendingAttachments = emptyList() },
+            title = { Text(pluralStringResource(R.plurals.send_files_title, files.size, files.size)) },
+            text = {
+                Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.send_files_body))
+                    files.forEach { uri ->
+                        val name = remember(uri) { displayNameOf(context, uri) }
+                        Text(name, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val replyTo = (mode as? ComposerMode.Reply)?.item?.eventId
+                    timeline.sendAttachments(context, files, replyTo)
+                    mode = ComposerMode.Normal
+                    pendingAttachments = emptyList()
+                    followLatest = true
+                }) { Text(stringResource(R.string.send)) }
+            },
+            dismissButton = { TextButton(onClick = { pendingAttachments = emptyList() }) { Text(stringResource(R.string.lock_cancel)) } },
+        )
+    }
+
     if (pickingLocation) {
         com.vknxworks.chatctrl.ui.location.LocationPickerDialog(
             onDismiss = { pickingLocation = false },
@@ -924,6 +988,21 @@ fun RoomScreen(
     if (creatingPoll) {
         PollDialog(onDismiss = { creatingPoll = false }, onCreate = { q, answers, disclosed -> timeline.createPoll(q, answers, disclosed); creatingPoll = false })
     }
+}
+
+/** The name another app gives a shared or picked file, for showing in a list. */
+private fun displayNameOf(context: android.content.Context, uri: Uri): String = runCatching {
+    context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+        if (c.moveToFirst()) c.getString(0) else null
+    }
+}.getOrNull()?.takeIf { it.isNotBlank() } ?: uri.lastPathSegment ?: Strings.str(R.string.file_2)
+
+/** Messages that can be sent on to another chat as they are. Stickers, polls and room events can't. */
+private fun UiContent.canForward(): Boolean = when (this) {
+    is UiContent.Text, is UiContent.Video, is UiContent.Audio, is UiContent.File -> true
+    is UiContent.Image -> !isSticker
+    is UiContent.Location -> geoUri.isNotBlank() && body != Strings.str(R.string.live_location_2)
+    else -> false
 }
 
 @Composable

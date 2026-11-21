@@ -73,6 +73,15 @@ class Prefs(context: Context) {
     val sendTyping: StateFlow<Boolean> = _sendTyping.asStateFlow()
     fun setSendTyping(on: Boolean) { sp.edit().putBoolean("send_typing", on).apply(); _sendTyping.value = on }
 
+    private val _strictDevices = MutableStateFlow(sp.getBoolean("verified_devices_only", false))
+    /**
+     * Strict mode: message keys go only to devices their owner has verified (cross-signed), and messages from
+     * devices that aren't are not shown. Read when the Matrix client is built, so changing it restarts the app.
+     */
+    val verifiedDevicesOnly: StateFlow<Boolean> = _strictDevices.asStateFlow()
+    /** Saved before returning (commit), because the app restarts right after. */
+    fun setVerifiedDevicesOnly(on: Boolean) { sp.edit().putBoolean("verified_devices_only", on).commit(); _strictDevices.value = on }
+
     private val _linkPreviews = MutableStateFlow(sp.getBoolean("link_previews", true))
     /** Show previews for links in messages (fetched by your homeserver). */
     val linkPreviews: StateFlow<Boolean> = _linkPreviews.asStateFlow()

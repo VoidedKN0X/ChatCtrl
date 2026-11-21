@@ -951,4 +951,32 @@
     <string name="private_read_receipts_subtitle">Others no longer see what you\'ve read. Your own devices still do, and you keep seeing what others have read.</string>
     <string name="send_typing">Show when I\'m typing</string>
     <string name="send_typing_subtitle">Tell the people in a chat that you\'re typing. You still see when others type.</string>
+
+    <!-- Forwarding -->
+    <string name="forward">Forward</string>
+    <string name="forward_to">Forward to</string>
+    <string name="search_chats_hint">Search chats</string>
+    <string name="no_chats_found">No chats found</string>
+    <string name="forward_confirm_title">Forward to %1$s?</string>
+    <string name="forward_confirm_body">A copy of the message is sent to that chat as a new message from you.</string>
+    <string name="forward_confirm_body_plain">A copy of the message is sent to that chat as a new message from you. That chat isn\'t encrypted, so the server can read what you forward there.</string>
+    <string name="forwarded_to">Forwarded to %1$s</string>
+    <string name="forward_failed">Couldn\'t forward the message</string>
+    <string name="forward_not_possible">This kind of message can\'t be forwarded</string>
+
+    <!-- Several files at once -->
+    <plurals name="send_files_title">
+        <item quantity="one">Send %1$d file?</item>
+        <item quantity="other">Send %1$d files?</item>
+    </plurals>
+    <string name="send_files_body">Each one is sent as its own message, in this order. Stay in this chat until they have all been sent.</string>
+
+    <!-- Strict mode -->
+    <string name="verified_devices_only">Verified devices only</string>
+    <string name="verified_devices_only_subtitle">Strict: your encrypted messages only go to devices their owner has verified, and messages from unverified devices aren\'t shown.</string>
+    <string name="verified_devices_only_on_title">Turn on verified devices only?</string>
+    <string name="verified_devices_only_on_body">From now on the keys for your encrypted messages only go to devices that their owner has verified (cross-signed). People who never set up verification, and sessions somebody never verified, can no longer read what you send. Encrypted messages sent from such devices show as \"not shown\" instead of their text.\n\nIt applies to this app only; your other devices keep their own setting. ChatCtrl restarts to apply it.</string>
+    <string name="verified_devices_only_off_title">Turn off verified devices only?</string>
+    <string name="verified_devices_only_off_body">Your encrypted messages go to every device of the people in a chat again, verified or not, and messages from unverified devices are shown with a warning. ChatCtrl restarts to apply it.</string>
+    <string name="verified_devices_only_restart">Restart</string>
 </resources>

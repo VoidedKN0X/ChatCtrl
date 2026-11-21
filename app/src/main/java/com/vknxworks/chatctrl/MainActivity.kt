@@ -129,6 +129,18 @@ class MainActivity : ComponentActivity() {
                     ?.takeIf { isForeignContentUri(this, it) }
                 if (text != null || stream != null) DeepLinks.share.value = SharedContent(text, stream)
             }
+            Intent.ACTION_SEND_MULTIPLE -> {
+                val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                // The same rule for every file in the list: only content from other apps.
+                val streams = IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                    .orEmpty()
+                    .filter { isForeignContentUri(this, it) }
+                    .distinct()
+                    .take(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)
+                if (text != null || streams.isNotEmpty()) {
+                    DeepLinks.share.value = SharedContent(text, streams.firstOrNull(), streams.drop(1))
+                }
+            }
         }
     }
 

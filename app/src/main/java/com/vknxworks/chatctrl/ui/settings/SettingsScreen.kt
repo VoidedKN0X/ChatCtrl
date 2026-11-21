@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Keyboard
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Info
@@ -112,6 +113,8 @@ fun SettingsScreen(
     val readReceipts by prefs.showReadReceipts.collectAsStateWithLifecycle()
     val linkPreviews by prefs.linkPreviews.collectAsStateWithLifecycle()
     val privateReceipts by prefs.privateReadReceipts.collectAsStateWithLifecycle()
+    val strictDevices by prefs.verifiedDevicesOnly.collectAsStateWithLifecycle()
+    var strictConfirm by remember { mutableStateOf<Boolean?>(null) }
     val sendTyping by prefs.sendTyping.collectAsStateWithLifecycle()
     val linkPreviewsE2ee by prefs.linkPreviewsEncrypted.collectAsStateWithLifecycle()
     val pushStatus by Push.status.collectAsStateWithLifecycle()
@@ -349,6 +352,12 @@ fun SettingsScreen(
                     ) { lock.lockTimeout = it }
                 }
                 GroupSwitch(
+                    stringResource(R.string.verified_devices_only),
+                    stringResource(R.string.verified_devices_only_subtitle),
+                    checked = strictDevices,
+                    icon = Icons.Outlined.VerifiedUser,
+                ) { strictConfirm = it }
+                GroupSwitch(
                     stringResource(R.string.private_read_receipts),
                     stringResource(R.string.private_read_receipts_subtitle),
                     checked = privateReceipts,
@@ -477,6 +486,20 @@ fun SettingsScreen(
             },
             confirmButton = { TextButton(onClick = { copyText(context, Strings.str(R.string.connection_log), text); connectionLog = null }) { Text(stringResource(R.string.copy)) } },
             dismissButton = { TextButton(onClick = { connectionLog = null }) { Text(stringResource(R.string.close)) } },
+        )
+    }
+
+    strictConfirm?.let { on ->
+        com.vknxworks.chatctrl.ui.ConfirmDialog(
+            title = stringResource(if (on) R.string.verified_devices_only_on_title else R.string.verified_devices_only_off_title),
+            text = stringResource(if (on) R.string.verified_devices_only_on_body else R.string.verified_devices_only_off_body),
+            confirm = stringResource(R.string.verified_devices_only_restart),
+            onDismiss = { strictConfirm = null },
+            onConfirm = {
+                prefs.setVerifiedDevicesOnly(on)
+                com.vknxworks.chatctrl.matrix.ConnectionLog.log("verified devices only: ${if (on) "on" else "off"}, restarting")
+                com.vknxworks.chatctrl.AppRestart.restart(context)
+            },
         )
     }
 

@@ -7,7 +7,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Content another app shared into ChatCtrl, waiting for the user to pick a room. */
-data class SharedContent(val text: String?, val uri: Uri?)
+data class SharedContent(val text: String?, val uri: Uri?, val more: List<Uri> = emptyList()) {
+    /** Every shared file: [uri] first, then the rest when several were shared at once. */
+    val uris: List<Uri> get() = listOfNotNull(uri) + more
+}
+
+/** The most files sent in one go (shared from another app or picked in a chat). */
+const val MAX_FILES_AT_ONCE = 20
 
 /** Things that arrive from outside the UI (intents, notifications) for the screens to act on. */
 object DeepLinks {

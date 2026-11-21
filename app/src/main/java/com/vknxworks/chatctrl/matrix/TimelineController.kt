@@ -53,6 +53,7 @@ import org.matrix.rustcomponents.sdk.UploadParameters
 import org.matrix.rustcomponents.sdk.UploadSource
 import org.matrix.rustcomponents.sdk.VideoInfo
 import org.matrix.rustcomponents.sdk.VirtualTimelineItem
+import org.matrix.rustcomponents.sdk.contentWithoutRelationFromMessage
 import org.matrix.rustcomponents.sdk.messageEventContentFromMarkdown
 import org.matrix.rustcomponents.sdk.messageEventContentFromMarkdownAsEmote
 import uniffi.matrix_sdk.PaginationStatus
@@ -572,6 +573,24 @@ class TimelineController(
         }
     }
 
+    /**
+     * Sends a copy of a message (text, picture, video, audio, file or location) to another chat. Media isn't
+     * uploaded again: the copy points at the same file, with its key when it's encrypted. People mentioned in the
+     * original aren't notified again. Throws when the message can't be forwarded or the chat isn't available.
+     */
+    suspend fun forward(eventId: String, targetRoomId: String) = withContext(Dispatchers.IO) {
+        val t = timeline ?: error(Strings.str(R.string.forward_failed))
+        val event = t.getEventTimelineItemByEventId(eventId)
+        val message = ((event.content as? TimelineItemContent.MsgLike)?.content?.kind as? MsgLikeKind.Message)?.content
+            ?: error(Strings.str(R.string.forward_not_possible))
+        val target = session.getRoom(targetRoomId) ?: error(Strings.str(R.string.forward_failed))
+        target.use { r ->
+            runCatching { r.enableSendQueue(true) }
+            r.timeline().use { tt -> tt.send(contentWithoutRelationFromMessage(message.copy(mentions = null))) }
+        }
+        Unit
+    }
+
     /** The event's raw JSON, for "View source". */
     suspend fun source(eventId: String): String? = withContext(Dispatchers.IO) {
         runCatching { timeline?.getEventTimelineItemByEventId(eventId)?.lazyProvider?.debugInfo()?.originalJson }.getOrNull()
@@ -579,6 +598,23 @@ class TimelineController(
 
     /** Copies a picked file into the cache and sends it as an image, video, audio clip or file. */
     fun sendAttachment(context: Context, uri: Uri, caption: String?, replyTo: String?) = launchAction { t ->
+        sendOne(t, context, uri, caption, replyTo)
+    }
+
+    /**
+     * Sends several files as separate messages, one after the other in the order given, so they arrive in that
+     * order. A file that can't be read or sent doesn't stop the rest; the first error is shown afterwards.
+     */
+    fun sendAttachments(context: Context, uris: List<Uri>, replyTo: String?) = launchAction { t ->
+        var firstError: Throwable? = null
+        uris.forEachIndexed { i, uri ->
+            runCatching { sendOne(t, context, uri, null, if (i == 0) replyTo else null) }
+                .onFailure { if (firstError == null) firstError = it }
+        }
+        firstError?.let { throw it }
+    }
+
+    private suspend fun sendOne(t: Timeline, context: Context, uri: Uri, caption: String?, replyTo: String?) {
         // Shared/picked files must come from another app, never from our own private storage.
         if (!com.vknxworks.chatctrl.ui.isForeignContentUri(context, uri)) error(Strings.str(R.string.this_file_can_t_be_sent))
         val resolver = context.contentResolver

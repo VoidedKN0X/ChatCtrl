@@ -47,7 +47,7 @@ class AppGraph(val context: Context) {
     fun sealing(): Boolean = vault.enabled && !prefs.notifications.value
 
     val store = SessionStore(context, vault, ::sealing)
-    val factory = ClientFactory(context, store)
+    val factory = ClientFactory(context, store) { prefs.verifiedDevicesOnly.value }
     val auth = AuthService(this)
     val redirectScheme: String = context.getString(R.string.login_redirect_scheme)
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.LogAndContinue)

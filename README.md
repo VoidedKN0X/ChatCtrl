@@ -28,7 +28,8 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Link previews and drafts** for every chat
 - **Send a location** (where you are or a dropped pin) and see received locations on an **OpenStreetMap** map, using Android's own location service
 - **Create rooms**, start direct chats, explore public rooms, and manage members and moderation
-- **Share to ChatCtrl** from other apps
+- **Share to ChatCtrl** from other apps, several pictures or files at once too, and **forward** a message to another chat
+- **Verified devices only**: an optional strict mode that only shares message keys with devices their owner has verified
 - **Device list**: rename your signed-in sessions, sign them out, or sign out every session you haven't used for a while in one go
 - **App lock** with its own PIN and optional fingerprint unlock; your saved sign-in stays encrypted while the app is locked (with notifications off)
 - **Hide in screenshots** and **Hide in recent apps**, two separate switches, both off by default
