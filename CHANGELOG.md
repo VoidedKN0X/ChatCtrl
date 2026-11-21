@@ -2,6 +2,16 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v2.2.3 (2026-11-21)
+
+Built and checked by CI only: not run on a phone when it was published.
+
+### Restored
+
+- **Everything from 2.2.0 and 2.2.1 is back; the rollback in 2.2.2 is undone.** The "Not sent" failures were not caused by the app. The reverse proxy in front of the homeserver (Nginx Proxy Manager) had lost its folder for buffering large requests (`/tmp/nginx/body`), so it answered every large request with an error 500 before it reached Synapse. The request that failed was the one that hands a message's encryption key to the other devices (`sendToDevice`), which is large; ordinary small requests kept working. Recreating the folder on the proxy fixed sending, on every app version.
+- Back in this version: the 2.2.0 changes (background sync that no longer wakes up every 5 seconds when the app is away, the room list shown once per batch of updates, the draft index read off the main thread), the new build tools (Android Gradle Plugin 9.5.1, Gradle 9.9.2, Kotlin 2.4.21, Compose BOM 2026.09.00) and the 2.2.1 changes (the reason under a failed message, and retry that switches sending for the chat back on).
+- Because this is the first version with the new build tools that stays installed: update over your installed version and check sign-in, sending, encrypted chats, calls and notifications.
+
 ## v2.2.2 (2026-11-21)
 
 Built and checked by CI only: not run on a phone when it was published.
