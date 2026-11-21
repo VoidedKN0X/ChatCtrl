@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Info
@@ -110,6 +111,8 @@ fun SettingsScreen(
     val doubleTap by prefs.doubleTapReaction.collectAsStateWithLifecycle()
     val readReceipts by prefs.showReadReceipts.collectAsStateWithLifecycle()
     val linkPreviews by prefs.linkPreviews.collectAsStateWithLifecycle()
+    val privateReceipts by prefs.privateReadReceipts.collectAsStateWithLifecycle()
+    val sendTyping by prefs.sendTyping.collectAsStateWithLifecycle()
     val linkPreviewsE2ee by prefs.linkPreviewsEncrypted.collectAsStateWithLifecycle()
     val pushStatus by Push.status.collectAsStateWithLifecycle()
     var bubbleDialog by remember { mutableStateOf(false) }
@@ -345,6 +348,18 @@ fun SettingsScreen(
                         icon = Icons.Outlined.Timer,
                     ) { lock.lockTimeout = it }
                 }
+                GroupSwitch(
+                    stringResource(R.string.private_read_receipts),
+                    stringResource(R.string.private_read_receipts_subtitle),
+                    checked = privateReceipts,
+                    icon = Icons.Outlined.DoneAll,
+                ) { prefs.setPrivateReadReceipts(it) }
+                GroupSwitch(
+                    stringResource(R.string.send_typing),
+                    stringResource(R.string.send_typing_subtitle),
+                    checked = sendTyping,
+                    icon = Icons.Outlined.Keyboard,
+                ) { prefs.setSendTyping(it) }
                 GroupSwitch(
                     stringResource(R.string.hide_screenshots),
                     stringResource(R.string.hide_screenshots_subtitle),

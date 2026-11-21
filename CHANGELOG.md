@@ -2,6 +2,15 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+### New
+
+- **Copy why a message failed, and retry all at once.** Hold a message that wasn't sent: **Copy the reason it failed** puts the reason shown under it on the clipboard (marked as sensitive, so keyboards don't keep it), and when more than one message in the chat failed, **Retry all failed messages** switches sending for the chat back on and tries them all again, oldest first. Not run on a phone.
+- **Sign out old devices in one go.** *You › Devices* has **Sign out old devices**: pick "not active for 30, 90, 180 or 365 days" (each choice shows how many devices it covers; devices without a last-active date are a separate choice), confirm, and they are all signed out together, with your password if the server asks for it. Every signed-in device gets a copy of the key for each encrypted chat, so fewer old sessions makes sending lighter. This device is never in the list. Not run on a phone.
+- **Private read receipts.** *Settings › Privacy and security › Private read receipts* (off by default): others no longer see what you've read, your own devices still do, and unread counts keep clearing. It applies to reading a chat, **Mark as read** in the chat list and the **Mark as read** button on a notification. Not run on a phone.
+- **A switch for "typing…".** *Settings › Privacy and security › Show when I'm typing* (on by default): turn it off and ChatCtrl no longer tells a chat that you're typing. You still see when others type. Not run on a phone.
+
 ## v2.2.3 (2026-11-21)
 
 Built and checked by CI only: not run on a phone when it was published.

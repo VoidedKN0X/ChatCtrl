@@ -64,6 +64,10 @@ import com.vknxworks.chatctrl.R
 
 private const val TAG = "Timeline"
 
+/** The receipt sent when you read a chat: public, or private (only your own devices see it) when that is switched on. */
+fun readReceiptType(): ReceiptType =
+    if (com.vknxworks.chatctrl.ChatCtrlApp.graph.prefs.privateReadReceipts.value) ReceiptType.READ_PRIVATE else ReceiptType.READ
+
 /** One room's live timeline (or one thread): items as UI models, back-pagination and every message action. */
 class TimelineController(
     private val session: MatrixSession,
@@ -503,6 +507,17 @@ class TimelineController(
         failedHandles.remove(item.key)?.tryResend()
     }
 
+    /** Tries every failed message in this chat again, oldest first. */
+    fun retryAll() = launchAction {
+        runCatching { room.enableSendQueue(true) }
+        val failed = _entries.value.filterIsInstance<TimelineEntry.Message>().filter { it.status == SendStatus.FAILED }
+        for (item in failed) {
+            loggedFailures.remove(item.key)
+            val handle = failedHandles.remove(item.key) ?: continue
+            runCatching { handle.tryResend() }
+        }
+    }
+
     fun cancelSend(item: TimelineEntry.Message) = launchAction { failedHandles.remove(item.key)?.abort(null) }
 
     fun vote(pollEventId: String, answerId: String) = launchAction { it.sendPollResponse(pollEventId, listOf(answerId)) }
@@ -515,7 +530,7 @@ class TimelineController(
 
     fun pin(eventId: String, pin: Boolean) = launchAction { if (pin) it.pinEvent(eventId) else it.unpinEvent(eventId) }
 
-    fun markAsRead() = launchAction { it.markAsRead(ReceiptType.READ) }
+    fun markAsRead() = launchAction { it.markAsRead(readReceiptType()) }
 
     /** Whether the newest message is on screen right now; then leaving the chat moves the "new messages" line. */
     @Volatile var seenLatest = false

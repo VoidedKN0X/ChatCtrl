@@ -926,4 +926,29 @@
     <string name="location_body_pin">Location: %1$s (%2$s)</string>
     <string name="location_body_described">%1$s (%2$s)</string>
     <string name="osm_credit">© OpenStreetMap contributors</string>
+
+    <!-- Failed messages -->
+    <string name="retry_all_failed">Retry all %1$d failed messages</string>
+    <string name="copy_send_error">Copy the reason it failed</string>
+    <string name="send_error_label">Send error</string>
+    <string name="send_error_copied">Reason copied</string>
+
+    <!-- Old sessions -->
+    <string name="sign_out_old_devices">Sign out old devices</string>
+    <string name="sign_out_old_devices_footer">Every signed-in device gets a copy of the key for each encrypted chat, so old sessions you no longer use make sending slower. Sign out the ones that haven\'t been active for a while in one go.</string>
+    <plurals name="old_devices_days">
+        <item quantity="one">Not active for %1$d days (%2$d device)</item>
+        <item quantity="other">Not active for %1$d days (%2$d devices)</item>
+    </plurals>
+    <plurals name="old_devices_never">
+        <item quantity="one">No last-active date (%1$d device)</item>
+        <item quantity="other">No last-active date (%1$d devices)</item>
+    </plurals>
+    <string name="no_old_devices">No other device has been inactive for 30 days or more</string>
+
+    <!-- Privacy: receipts and typing -->
+    <string name="private_read_receipts">Private read receipts</string>
+    <string name="private_read_receipts_subtitle">Others no longer see what you\'ve read. Your own devices still do, and you keep seeing what others have read.</string>
+    <string name="send_typing">Show when I\'m typing</string>
+    <string name="send_typing_subtitle">Tell the people in a chat that you\'re typing. You still see when others type.</string>
 </resources>

@@ -18,6 +18,8 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **End-to-end encryption** by default, with device verification and key backup
 - **Messages**: replies, threads, reactions, edits, polls, voice messages, images, videos, files and locations; stickers and GIFs other people send show in the chat
 - **Quick gestures**: swipe a message to reply, double-tap to react, and see who has read up to where
+- **Failed messages explained**: the reason shows under a message that wasn't sent; copy it, retry one or retry all
+- **Private read receipts** and a switch for **typing notices**, so others don't see what you've read or that you're typing
 - **Chat bubbles** in six styles, from Modern to no bubbles at all (like Element Web)
 - **Media and files** for each chat: a photo and video grid and a list of files and voice messages
 - **Search inside chats**, including encrypted ones
@@ -27,7 +29,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Send a location** (where you are or a dropped pin) and see received locations on an **OpenStreetMap** map, using Android's own location service
 - **Create rooms**, start direct chats, explore public rooms, and manage members and moderation
 - **Share to ChatCtrl** from other apps
-- **Device list**: rename your signed-in sessions or sign them out
+- **Device list**: rename your signed-in sessions, sign them out, or sign out every session you haven't used for a while in one go
 - **App lock** with its own PIN and optional fingerprint unlock; your saved sign-in stays encrypted while the app is locked (with notifications off)
 - **Hide in screenshots** and **Hide in recent apps**, two separate switches, both off by default
 - **The Ctrl series layout**: **Chats** and **Explore** tabs on a floating glass tab bar (a side rail on tablets), and your profile picture at the top right opens the **You** page with your account, **Settings** and **About**

@@ -437,7 +437,7 @@ fun HomeScreen(
             }
             if (room.hasUnread) {
                 SettingRow(Icons.Outlined.MarkChatRead, stringResource(R.string.room_mark_read)) {
-                    withRoom { it.markAsRead(ReceiptType.READ); it.setUnreadFlag(false) }
+                    withRoom { it.markAsRead(com.vknxworks.chatctrl.matrix.readReceiptType()); it.setUnreadFlag(false) }
                 }
             } else {
                 SettingRow(Icons.Outlined.MarkChatUnread, stringResource(R.string.room_mark_unread)) { withRoom { it.setUnreadFlag(true) } }

@@ -63,6 +63,16 @@ class Prefs(context: Context) {
     val showReadReceipts: StateFlow<Boolean> = _readReceipts.asStateFlow()
     fun setShowReadReceipts(on: Boolean) { sp.edit().putBoolean("show_read_receipts", on).apply(); _readReceipts.value = on }
 
+    private val _privateReceipts = MutableStateFlow(sp.getBoolean("private_read_receipts", false))
+    /** Send read receipts only to your own devices: other people no longer see what you have read. */
+    val privateReadReceipts: StateFlow<Boolean> = _privateReceipts.asStateFlow()
+    fun setPrivateReadReceipts(on: Boolean) { sp.edit().putBoolean("private_read_receipts", on).apply(); _privateReceipts.value = on }
+
+    private val _sendTyping = MutableStateFlow(sp.getBoolean("send_typing", true))
+    /** Tell the people in a chat when you are typing. */
+    val sendTyping: StateFlow<Boolean> = _sendTyping.asStateFlow()
+    fun setSendTyping(on: Boolean) { sp.edit().putBoolean("send_typing", on).apply(); _sendTyping.value = on }
+
     private val _linkPreviews = MutableStateFlow(sp.getBoolean("link_previews", true))
     /** Show previews for links in messages (fetched by your homeserver). */
     val linkPreviews: StateFlow<Boolean> = _linkPreviews.asStateFlow()

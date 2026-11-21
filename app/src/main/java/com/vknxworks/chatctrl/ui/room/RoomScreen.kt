@@ -693,6 +693,17 @@ fun RoomScreen(
             }
             if (item.status == SendStatus.FAILED) {
                 SettingRow(Icons.Outlined.Refresh, stringResource(R.string.retry_sending)) { timeline.retry(item); sheetFor = null }
+                val failedCount = entries.count { it is TimelineEntry.Message && it.status == SendStatus.FAILED }
+                if (failedCount > 1) {
+                    SettingRow(Icons.Outlined.Refresh, stringResource(R.string.retry_all_failed, failedCount)) { timeline.retryAll(); sheetFor = null }
+                }
+                item.sendError?.takeIf { it.isNotBlank() }?.let { reason ->
+                    SettingRow(Icons.Outlined.ContentCopy, stringResource(R.string.copy_send_error)) {
+                        copyText(context, Strings.str(R.string.send_error_label), reason, sensitive = true)
+                        sheetFor = null
+                        scope.launch { snackbar.showSnackbar(Strings.str(R.string.send_error_copied)) }
+                    }
+                }
                 SettingRow(Icons.Outlined.Close, stringResource(R.string.cancel_sending)) { timeline.cancelSend(item); sheetFor = null }
             }
             if (item.canReply && item.eventId != null) {

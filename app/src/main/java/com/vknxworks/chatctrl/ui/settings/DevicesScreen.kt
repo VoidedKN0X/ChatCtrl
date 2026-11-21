@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.Refresh
@@ -73,6 +74,7 @@ fun DevicesScreen(session: MatrixSession, onBack: () -> Unit, onLinkDevice: () -
     var selected by remember { mutableStateOf<DeviceInfo?>(null) }
     var renaming by remember { mutableStateOf<DeviceInfo?>(null) }
     var confirmOut by remember { mutableStateOf<List<String>?>(null) }
+    var pickingOld by remember { mutableStateOf(false) }
     var passwordFor by remember { mutableStateOf<Pair<List<String>, String>?>(null) }
 
     fun reload() {
@@ -135,7 +137,13 @@ fun DevicesScreen(session: MatrixSession, onBack: () -> Unit, onLinkDevice: () -
                         }
                     }
                     item {
-                        Group {
+                        Group(footer = stringResource(R.string.sign_out_old_devices_footer)) {
+                            GroupRow(
+                                stringResource(R.string.sign_out_old_devices),
+                                icon = Icons.Outlined.History,
+                                showChevron = true,
+                                onClick = { pickingOld = true },
+                            )
                             GroupRow(
                                 stringResource(R.string.sign_out_all_other_devices),
                                 icon = Icons.AutoMirrored.Outlined.Logout,
@@ -154,6 +162,32 @@ fun DevicesScreen(session: MatrixSession, onBack: () -> Unit, onLinkDevice: () -
                     }
                 }
             }
+        }
+    }
+
+    if (pickingOld) {
+        // Other devices grouped by how long ago they were last active; the count is what would be signed out.
+        val now = remember { System.currentTimeMillis() }
+        val options = remember(others) {
+            val day = 24L * 60 * 60 * 1000
+            val out = ArrayList<Pair<List<String>, String>>()
+            for (days in listOf(30, 90, 180, 365)) {
+                val ids = others.filter { d -> d.lastSeenTs != null && now - d.lastSeenTs > days * day }.map { it.deviceId }
+                if (ids.isNotEmpty()) out += ids to Strings.plural(R.plurals.old_devices_days, ids.size, days, ids.size)
+            }
+            val never = others.filter { it.lastSeenTs == null }.map { it.deviceId }
+            if (never.isNotEmpty()) out += never to Strings.plural(R.plurals.old_devices_never, never.size, never.size)
+            out
+        }
+        if (options.isEmpty()) {
+            LaunchedEffect(Unit) { pickingOld = false; snackbar.showSnackbar(Strings.str(R.string.no_old_devices)) }
+        } else {
+            com.vknxworks.chatctrl.ui.ChoiceSheet<List<String>>(
+                stringResource(R.string.sign_out_old_devices),
+                options,
+                selected = null,
+                onDismiss = { pickingOld = false },
+            ) { ids -> pickingOld = false; confirmOut = ids }
         }
     }
 

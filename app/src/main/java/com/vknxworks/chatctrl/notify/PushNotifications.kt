@@ -306,11 +306,11 @@ class NotificationActionReceiver : BroadcastReceiver() {
                         runCatching {
                             r.timeline().use { t -> t.send(messageEventContentFromMarkdown(replyText)) }
                         }
-                        runCatching { r.markAsRead(ReceiptType.READ) }
+                        runCatching { r.markAsRead(com.vknxworks.chatctrl.matrix.readReceiptType()) }
                         PushNotifications.appendOwnReply(context, roomId, replyText)
                     } else {
                         // Also move the "new messages" line, so the chat opens without it.
-                        runCatching { r.markAsRead(ReceiptType.READ) }
+                        runCatching { r.markAsRead(com.vknxworks.chatctrl.matrix.readReceiptType()) }
                         runCatching { r.markAsRead(ReceiptType.FULLY_READ) }
                         runCatching { r.setUnreadFlag(false) }
                         PushNotifications.forget(roomId)

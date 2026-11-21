@@ -242,7 +242,8 @@ class RoomController(val session: MatrixSession, val room: Room) {
 
     /** Sends "typing…" while composing, and clears it after a few idle seconds. */
     fun onComposerChanged(text: String) {
-        val nowTyping = text.isNotBlank()
+        // With typing notices switched off nothing is sent (a notice already out is still cleared).
+        val nowTyping = text.isNotBlank() && com.vknxworks.chatctrl.ChatCtrlApp.graph.prefs.sendTyping.value
         typingJob?.cancel()
         typingJob = scope.launch {
             if (nowTyping != isTyping) {
