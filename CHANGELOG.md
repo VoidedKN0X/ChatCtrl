@@ -2,6 +2,12 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+### New
+
+- **ChatCtrl in French and German, following the phone's language.** Next to English and Dutch, every screen, message and notification of ChatCtrl now also exists in French and German, so all three Belgian languages are covered. Android picks the language from the phone's settings, and the app's own language setting in Android (Settings > Apps > ChatCtrl > Language) now offers English, Dutch, French and German. Translated by Claude and checked by script (every string present, placeholders identical); not yet reviewed by a native speaker or run on a phone.
+
 ## v2.3.1 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.
