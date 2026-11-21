@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ChatCtrl</string>
+    <string name="app_name" translatable="false">ChatCtrl</string>
     <string name="group_about">About</string>
     <string name="support_title">Support ChatCtrl</string>
     <string name="support_subtitle">ChatCtrl is free and open source. Sponsor development on GitHub</string>
     <string name="bugs_title">Report a bug</string>
     <string name="bugs_subtitle">Found a problem or have an idea? Open an issue on GitHub</string>
     <string name="source_title">Source code</string>
-    <string name="source_subtitle">github.com/VoidedKN0X/ChatCtrl</string>
+    <string name="source_subtitle" translatable="false">github.com/VoidedKN0X/ChatCtrl</string>
     <string name="licence_title">Licence</string>
-    <string name="licence_subtitle">GNU General Public License v3.0</string>
-    <string name="about_footer">ChatCtrl %1$s · VKNXWorks</string>
+    <string name="licence_subtitle" translatable="false">GNU General Public License v3.0</string>
+    <string name="about_footer" translatable="false">ChatCtrl %1$s · VKNXWorks</string>
     <!-- Reverse-domain scheme of the OAuth client URI (github.com/VoidedKN0X/ChatCtrl), as Matrix Authentication Service requires. -->
     <string name="login_redirect_scheme" translatable="false">com.github.voidedkn0x.chatctrl</string>
 
@@ -191,7 +191,7 @@
     <string name="connection_log">Connection log</string>
     <string name="connection_log_subtitle">What the connection did recently, to explain disconnects. No messages, names or servers.</string>
     <string name="connection_log_empty">Nothing logged yet.</string>
-    <string name="sdk_version">Matrix Rust SDK</string>
+    <string name="sdk_version" translatable="false">Matrix Rust SDK</string>
 
     <!-- Chats tab -->
     <string name="chats_search">Search</string>
@@ -297,8 +297,8 @@
     <string name="call_audio_output">Audio output</string>
     <string name="call_audio_output_none">No audio outputs found.</string>
     <string name="call_audio_output_in_use">In use</string>
-    <string name="audio_bluetooth">Bluetooth</string>
-    <string name="audio_usb">USB</string>
+    <string name="audio_bluetooth" translatable="false">Bluetooth</string>
+    <string name="audio_usb" translatable="false">USB</string>
     <string name="audio_wired">Headphones</string>
     <string name="audio_speaker">Speaker</string>
     <string name="audio_earpiece">Phone</string>
@@ -327,7 +327,7 @@
     <string name="no_bubbles">No bubbles</string>
     <string name="everything_on_the_left_with_names">Everything on the left with names, like Element Web</string>
     <string name="the_largest_public_server_run_by_the">The largest public server, run by the Matrix.org Foundation. Free and open to everyone.</string>
-    <string name="mozilla">Mozilla</string>
+    <string name="mozilla" translatable="false">Mozilla</string>
     <string name="mozilla_s_community_server_sign_in">Mozilla\'s community server. Sign in with a Mozilla account or GitHub.</string>
     <string name="couldn_t_read_the_picture">Couldn\'t read the picture</string>
     <string name="starting">Starting…</string>
@@ -409,7 +409,7 @@
     <string name="the_server_s_tls_certificate_isn_t">The server\'s TLS certificate isn\'t trusted. If it uses your own CA, install that certificate on the phone.</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="the_server_s_response_was_too_large">The server\'s response was too large</string>
-    <string name="http">HTTP %1$s</string>
+    <string name="http" translatable="false">HTTP %1$s</string>
     <string name="network">network %1$s</string>
     <string name="no_media_source">No media source</string>
     <string name="bad_file_name">Bad file name</string>
@@ -728,7 +728,7 @@
     <string name="searches_messages_stored_on_this">Searches messages stored on this phone, including encrypted chats. Older history is added in the background while you search.</string>
     <string name="no_results">No results</string>
     <string name="older_messages_may_still_be_indexing">Older messages may still be indexing. Try again in a moment.</string>
-    <string name="sample_name">Ana</string>
+    <string name="sample_name" translatable="false">Ana</string>
     <string name="sample_message_theirs">Are we still on for tonight? 🍕</string>
     <string name="sample_me">Me</string>
     <string name="sample_message_mine">Yes! See you at 8</string>
@@ -830,20 +830,20 @@
     <string name="backup_resuming">Resuming backup…</string>
     <string name="backup_downloading">Downloading keys…</string>
     <string name="backup_turning_off">Turning off backup…</string>
-    <string name="recovery_state_with_note">%1$s %2$s</string>
+    <string name="recovery_state_with_note" translatable="false">%1$s %2$s</string>
 
     <!-- Whole sentences instead of joined pieces -->
-    <string name="list_separator">" · "</string>
-    <string name="list_separator_wide">"  ·  "</string>
+    <string name="list_separator" translatable="false">" · "</string>
+    <string name="list_separator_wide" translatable="false">"  ·  "</string>
     <string name="someone_lower">someone</string>
     <string name="search_this_chat">Search this chat</string>
     <string name="this_is_the_beginning_of_this_room">This is the beginning of this room</string>
-    <string name="bubble_style_summary">%1$s · %2$s</string>
-    <string name="preview_image">🖼 %1$s</string>
-    <string name="preview_video">🎬 %1$s</string>
-    <string name="preview_audio">🎵 %1$s</string>
-    <string name="preview_file">📎 %1$s</string>
-    <string name="preview_poll">📊 %1$s</string>
+    <string name="bubble_style_summary" translatable="false">%1$s · %2$s</string>
+    <string name="preview_image" translatable="false">🖼 %1$s</string>
+    <string name="preview_video" translatable="false">🎬 %1$s</string>
+    <string name="preview_audio" translatable="false">🎵 %1$s</string>
+    <string name="preview_file" translatable="false">📎 %1$s</string>
+    <string name="preview_poll" translatable="false">📊 %1$s</string>
     <string name="by_with_reason">%1$s by %2$s: %3$s</string>
     <plurals name="thread_replies">
         <item quantity="one">%1$d reply</item>
@@ -924,7 +924,7 @@
     <string name="location_tap_to_view">tap to view</string>
     <string name="location_body_mine">My location: %1$s (%2$s)</string>
     <string name="location_body_pin">Location: %1$s (%2$s)</string>
-    <string name="location_body_described">%1$s (%2$s)</string>
+    <string name="location_body_described" translatable="false">%1$s (%2$s)</string>
     <string name="osm_credit">© OpenStreetMap contributors</string>
 
     <!-- Failed messages -->
@@ -999,7 +999,7 @@
     <string name="backup_nothing_to_change">Nothing to change: your settings already match the file</string>
     <string name="backup_restore_title">Restore these settings?</string>
     <string name="backup_restore_body">These settings will be replaced:\n\n%1$s\n\nPrivacy switches are only ever changed to the more private side.</string>
-    <string name="backup_change_line">%1$s: %2$s → %3$s</string>
+    <string name="backup_change_line" translatable="false">%1$s: %2$s → %3$s</string>
     <string name="backup_restore_confirm">Restore</string>
     <string name="backup_restored">Settings restored</string>
     <string name="backup_value_on">on</string>
@@ -1007,7 +1007,7 @@
 
     <!-- Stickers and GIFs -->
     <string name="stickers">Stickers</string>
-    <string name="gif">GIF</string>
+    <string name="gif" translatable="false">GIF</string>
     <string name="stickers_my_pack">My stickers</string>
     <string name="stickers_room_pack">Room stickers</string>
     <string name="stickers_add">Add</string>
