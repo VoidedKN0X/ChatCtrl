@@ -9,12 +9,13 @@ import java.security.KeyStore
 import java.util.UUID
 
 /**
- * The phone side of push through ntfy. ntfy keeps one connection to your ntfy server and hands ChatCtrl what
- * your homeserver sends to its endpoint. This speaks the UnifiedPush Android protocol
- * (https://unifiedpush.org/developers/spec/android/) directly with ntfy, without a library, and only with ntfy.
+ * The phone side of push through a UnifiedPush app ("distributor"): ntfy unless another one was chosen in
+ * Settings. The push app keeps one connection to its server and hands ChatCtrl what your homeserver sends to its
+ * endpoint. This speaks the UnifiedPush Android protocol (https://unifiedpush.org/developers/spec/android/)
+ * directly with that one app, without a library.
  */
 object UnifiedPush {
-    /** ntfy's package name: the only app ChatCtrl registers with. */
+    /** ntfy's package name: the push app ChatCtrl uses unless another one is chosen. */
     const val NTFY = "io.heckel.ntfy"
     const val NTFY_DOWNLOAD = "https://f-droid.org/packages/io.heckel.ntfy/"
 
@@ -37,13 +38,45 @@ object UnifiedPush {
 
     private const val PREFS = "unifiedpush"
     private const val KEY_TOKEN = "token"
+    private const val KEY_DISTRIBUTOR = "distributor"
+
+    /** A UnifiedPush app installed on the phone. */
+    data class PushApp(val pkg: String, val label: String)
+
+    /** The push app registrations go to: the one chosen in Settings, or ntfy when none was chosen. */
+    fun distributor(context: Context): String = prefs(context).getString(KEY_DISTRIBUTOR, null)?.takeIf { it.isNotBlank() } ?: NTFY
+
+    /** Remembers the chosen push app. Unregister from the old one first (see Push.switchApp). */
+    fun setDistributor(context: Context, pkg: String) {
+        prefs(context).edit().putString(KEY_DISTRIBUTOR, pkg).commit()
+    }
+
+    /** The name Android shows for a push app; "ntfy" for ntfy, the package name when it isn't installed. */
+    fun label(context: Context, pkg: String = distributor(context)): String {
+        if (pkg == NTFY) return "ntfy"
+        return runCatching {
+            val pm = context.packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(pkg, PackageManager.ApplicationInfoFlags.of(0))).toString()
+        }.getOrNull()?.takeIf { it.isNotBlank() } ?: pkg
+    }
+
+    /** Every installed app that takes UnifiedPush registrations, ntfy first. */
+    @Suppress("DEPRECATION")
+    fun installedDistributors(context: Context): List<PushApp> = runCatching {
+        context.packageManager.queryBroadcastReceivers(Intent(ACTION_REGISTER), 0)
+            .mapNotNull { it.activityInfo?.packageName }
+            .filter { it != context.packageName }
+            .distinct()
+            .map { PushApp(it, label(context, it)) }
+            .sortedWith(compareByDescending<PushApp> { it.pkg == NTFY }.thenBy { it.label.lowercase() })
+    }.getOrDefault(emptyList())
 
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    /** Whether ntfy is installed and can take registrations. */
+    /** Whether the chosen push app (ntfy by default) is installed and can take registrations. */
     @Suppress("DEPRECATION")
-    fun isNtfyInstalled(context: Context): Boolean = runCatching {
-        context.packageManager.queryBroadcastReceivers(Intent(ACTION_REGISTER).setPackage(NTFY), 0).isNotEmpty()
+    fun isPushAppInstalled(context: Context): Boolean = runCatching {
+        context.packageManager.queryBroadcastReceivers(Intent(ACTION_REGISTER).setPackage(distributor(context)), 0).isNotEmpty()
     }.getOrDefault(false)
 
     /** Whether a package is installed at all (to tell "ntfy uninstalled" from "never had it"). */
@@ -51,18 +84,18 @@ object UnifiedPush {
         context.packageManager.getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(0)); true
     }.getOrDefault(false)
 
-    /** The random secret that proves a broadcast really comes from ntfy for our registration. */
+    /** The random secret that proves a broadcast really comes from the push app for our registration. */
     fun token(context: Context): String? = prefs(context).getString(KEY_TOKEN, null)
 
-    /** Asks ntfy for an endpoint. The answer (NEW_ENDPOINT or REGISTRATION_FAILED) arrives in [PushReceiver]. */
+    /** Asks the push app for an endpoint. The answer (NEW_ENDPOINT or REGISTRATION_FAILED) arrives in [PushReceiver]. */
     fun register(context: Context, description: String): Boolean {
-        if (!isNtfyInstalled(context)) return false
+        if (!isPushAppInstalled(context)) return false
         val p = prefs(context)
         val token = p.getString(KEY_TOKEN, null) ?: UUID.randomUUID().toString().also { p.edit().putString(KEY_TOKEN, it).commit() }
         send(
             context,
             Intent(ACTION_REGISTER).apply {
-                `package` = NTFY
+                `package` = distributor(context)
                 putExtra(EXTRA_TOKEN, token)
                 putExtra("features", arrayOf(FEATURE_BYTES_MESSAGE))
                 putExtra("application", context.packageName)
@@ -72,11 +105,11 @@ object UnifiedPush {
         return true
     }
 
-    /** Tells ntfy to drop our registration and forgets the token, so the old endpoint can never reach the app again. */
+    /** Tells the push app to drop our registration and forgets the token, so the old endpoint can never reach the app again. */
     fun unregister(context: Context) {
         val token = token(context)
         prefs(context).edit().remove(KEY_TOKEN).commit()
-        if (token != null && isNtfyInstalled(context)) sendUnregister(context, NTFY, token)
+        if (token != null && isPushAppInstalled(context)) sendUnregister(context, distributor(context), token)
     }
 
     /** After REGISTRATION_FAILED the next registration must use a new token (spec). */
@@ -89,7 +122,7 @@ object UnifiedPush {
         runCatching {
             context.sendBroadcast(
                 Intent(ACTION_MESSAGE_ACK).apply {
-                    `package` = NTFY
+                    `package` = distributor(context)
                     putExtra(EXTRA_TOKEN, token)
                     putExtra(EXTRA_ID, id)
                 },

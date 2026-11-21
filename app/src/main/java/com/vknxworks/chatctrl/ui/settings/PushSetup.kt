@@ -36,12 +36,15 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import com.vknxworks.chatctrl.R
 
-/** Choose instant push through ntfy or only the periodic background check. */
+/** Choose instant push through ntfy (or another installed UnifiedPush app) or only the periodic background check. */
 @Composable
-fun PushSetupDialog(session: MatrixSession, ntfyInstalled: Boolean, onDismiss: () -> Unit) {
+fun PushSetupDialog(session: MatrixSession, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pushOn = Push.isEnabled(context)
+    val apps = androidx.compose.runtime.remember { UnifiedPush.installedDistributors(context) }
+    val current = androidx.compose.runtime.remember { UnifiedPush.distributor(context) }
+    val ntfyInstalled = apps.any { it.pkg == UnifiedPush.NTFY }
 
     com.vknxworks.chatctrl.ui.components.CtrlDialog(
         onDismissRequest = onDismiss,
@@ -53,20 +56,33 @@ fun PushSetupDialog(session: MatrixSession, ntfyInstalled: Boolean, onDismiss: (
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Option(
-                    stringResource(R.string.instant_push_with_ntfy),
-                    if (ntfyInstalled) stringResource(R.string.plus_the_background_check) else stringResource(R.string.ntfy_isn_t_installed_on_this_phone),
-                    selected = pushOn,
-                    enabled = ntfyInstalled,
-                ) {
-                    if (Push.enable(context)) {
-                        // Like Element X: push only works reliably if the app may use the network while the phone sleeps.
-                        if (!com.vknxworks.chatctrl.notify.Battery.isUnrestricted(context)) {
-                            com.vknxworks.chatctrl.notify.Battery.requestUnrestricted(context)
+                if (!ntfyInstalled) {
+                    Option(
+                        stringResource(R.string.instant_push_with_ntfy, "ntfy"),
+                        stringResource(R.string.ntfy_isn_t_installed_on_this_phone),
+                        selected = false,
+                        enabled = false,
+                    ) {}
+                }
+                // One choice per installed UnifiedPush app, ntfy first.
+                apps.forEach { app ->
+                    Option(
+                        stringResource(R.string.instant_push_with_ntfy, app.label),
+                        stringResource(if (app.pkg == UnifiedPush.NTFY) R.string.plus_the_background_check else R.string.push_other_app_note),
+                        selected = pushOn && app.pkg == current,
+                    ) {
+                        // On the app's own scope: the dialog (and its scope) closes right after the tap.
+                        ChatCtrlApp.graph.scope.launch {
+                            // Another app than before: the old registration and pusher are removed first.
+                            val ok = if (app.pkg != current) Push.switchApp(context, session, app.pkg) else Push.enable(context)
+                            // Like Element X: push only works reliably if the app may use the network while the phone sleeps.
+                            if (ok && !com.vknxworks.chatctrl.notify.Battery.isUnrestricted(context)) {
+                                com.vknxworks.chatctrl.notify.Battery.requestUnrestricted(context)
+                            }
+                            Notifier.schedule(context, ChatCtrlApp.graph.prefs.notifications.value)
                         }
+                        onDismiss()
                     }
-                    Notifier.schedule(context, ChatCtrlApp.graph.prefs.notifications.value)
-                    onDismiss()
                 }
                 Option(stringResource(R.string.background_check_only), stringResource(R.string.every_15_minutes_no_extra_app_needed), selected = !pushOn) {
                     scope.launch {

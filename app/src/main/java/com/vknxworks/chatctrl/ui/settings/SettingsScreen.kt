@@ -175,6 +175,11 @@ fun SettingsScreen(
             // ---------- Notifications ----------
             val health = rememberPushHealth()
             val pushOn = Push.isEnabled(context)
+            // The push app in use (ntfy unless another UnifiedPush app was chosen) and its name, read again
+            // whenever the delivery dialog closes or the push state changes.
+            val pushApp = remember(pushStatus, pushDialog) { UnifiedPush.distributor(context) }
+            val pushAppName = remember(pushApp) { UnifiedPush.label(context, pushApp) }
+            val anyPushApp = remember(pushStatus, pushDialog, health) { UnifiedPush.installedDistributors(context).isNotEmpty() }
             val appHeldBack = !health.appUnrestricted || health.appBackgroundRestricted
             Group(stringResource(R.string.group_notifications)) {
                 GroupSwitch(
@@ -197,26 +202,25 @@ fun SettingsScreen(
                 }
                 GroupRow(
                     stringResource(R.string.delivery),
-                    stringResource(
-                        when (pushStatus) {
-                            is PushStatus.Active -> R.string.delivery_active
-                            PushStatus.Registering -> R.string.delivery_registering
-                            PushStatus.Unavailable -> R.string.delivery_unavailable
-                            PushStatus.NoNtfy -> R.string.delivery_no_ntfy
-                            is PushStatus.Failed -> R.string.delivery_failed
-                            PushStatus.Off -> R.string.delivery_off
-                        },
-                    ),
+                    when (pushStatus) {
+                        is PushStatus.Active -> stringResource(R.string.delivery_active, pushAppName)
+                        PushStatus.Registering -> stringResource(R.string.delivery_registering, pushAppName)
+                        PushStatus.Unavailable -> stringResource(R.string.delivery_unavailable, pushAppName)
+                        PushStatus.NoNtfy -> stringResource(R.string.delivery_no_ntfy, pushAppName)
+                        is PushStatus.Failed -> stringResource(R.string.delivery_failed)
+                        PushStatus.Off -> stringResource(R.string.delivery_off)
+                    },
                     icon = Icons.Outlined.Bolt,
                     showChevron = true,
                     onClick = { pushDialog = true },
                 )
-                if (notifications && !health.ntfyInstalled) {
+                // With push on: the chosen push app is gone. With push off: only when no push app is installed at all.
+                if (notifications && !health.ntfyInstalled && (pushOn || !anyPushApp)) {
                     PushWarning(
                         Icons.Outlined.NotificationsOff,
-                        stringResource(R.string.warn_no_ntfy_title),
-                        stringResource(if (pushOn) R.string.warn_no_ntfy_body_on else R.string.warn_no_ntfy_body_off),
-                        listOf(stringResource(R.string.warn_install_ntfy) to { openUrl(context, UnifiedPush.NTFY_DOWNLOAD) }),
+                        stringResource(R.string.warn_no_ntfy_title, pushAppName),
+                        if (pushOn) stringResource(R.string.warn_no_ntfy_body_on, pushAppName) else stringResource(R.string.warn_no_ntfy_body_off),
+                        if (pushApp == UnifiedPush.NTFY) listOf(stringResource(R.string.warn_install_ntfy) to { openUrl(context, UnifiedPush.NTFY_DOWNLOAD) }) else emptyList(),
                     )
                 }
                 (pushStatus as? PushStatus.Failed)?.let { st ->
@@ -250,11 +254,11 @@ fun SettingsScreen(
                 if (notifications && pushOn && health.ntfyInstalled && !health.ntfyUnrestricted) {
                     PushWarning(
                         Icons.Outlined.BatteryAlert,
-                        stringResource(R.string.warn_ntfy_battery_title),
-                        stringResource(R.string.warn_ntfy_battery_body),
+                        stringResource(R.string.warn_ntfy_battery_title, pushAppName),
+                        stringResource(R.string.warn_ntfy_battery_body, pushAppName),
                         listOf(
-                            stringResource(R.string.warn_ntfy_app_info) to { Battery.openNtfyAppInfo(context) },
-                            stringResource(R.string.warn_open_ntfy) to { Battery.openNtfy(context); Unit },
+                            stringResource(R.string.warn_ntfy_app_info, pushAppName) to { Battery.openNtfyAppInfo(context) },
+                            stringResource(R.string.warn_open_ntfy, pushAppName) to { Battery.openNtfy(context); Unit },
                         ),
                     )
                 }
@@ -444,6 +448,8 @@ fun SettingsScreen(
                 }
             }
 
+            BackupGroup()
+
             // ---------- Troubleshooting ----------
 
             Group(stringResource(R.string.group_troubleshooting)) {
@@ -503,7 +509,7 @@ fun SettingsScreen(
         )
     }
 
-    if (pushDialog) PushSetupDialog(session, UnifiedPush.isNtfyInstalled(context), onDismiss = { pushDialog = false })
+    if (pushDialog) PushSetupDialog(session, onDismiss = { pushDialog = false })
 
     if (bubbleDialog) BubbleStylePicker(bubbleStyle, prefs::setBubbleStyle) { bubbleDialog = false }
 }

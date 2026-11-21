@@ -23,7 +23,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Chat bubbles** in six styles, from Modern to no bubbles at all (like Element Web)
 - **Media and files** for each chat: a photo and video grid and a list of files and voice messages
 - **Search inside chats**, including encrypted ones
-- **Push notifications through [ntfy](https://f-droid.org/packages/io.heckel.ntfy/)** only, grouped per chat with reply and Mark as read, with a background check every ~15 minutes as a fallback
+- **Push notifications through [ntfy](https://f-droid.org/packages/io.heckel.ntfy/)** (or another UnifiedPush app whose server has its own Matrix gateway), grouped per chat with reply and Mark as read, with a background check every ~15 minutes as a fallback
 - **Voice and video calls** in direct chats and rooms, with people on Element X and Element Web: the same Element Call as Element X, bundled in the app, with incoming calls ringing on a full screen, picture-in-picture and speaker, earpiece and Bluetooth audio ([what your server needs](#calls))
 - **Link previews and drafts** for every chat
 - **Send a location** (where you are or a dropped pin) and see received locations on an **OpenStreetMap** map, using Android's own location service
@@ -31,6 +31,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Share to ChatCtrl** from other apps, several pictures or files at once too, and **forward** a message to another chat
 - **Verified devices only**: an optional strict mode that only shares message keys with devices their owner has verified
 - **Device list**: rename your signed-in sessions, sign them out, or sign out every session you haven't used for a while in one go
+- **Back up and restore settings** to a file: the app's own settings only, never your sign-in, keys or PIN
 - **App lock** with its own PIN and optional fingerprint unlock; your saved sign-in stays encrypted while the app is locked (with notifications off)
 - **Hide in screenshots** and **Hide in recent apps**, two separate switches, both off by default
 - **The Ctrl series layout**: **Chats** and **Explore** tabs on a floating glass tab bar (a side rail on tablets), and your profile picture at the top right opens the **You** page with your account, **Settings** and **About**
@@ -105,7 +106,7 @@ See [Privacy](#privacy) for everything ChatCtrl connects to.
 
 ## Tips and troubleshooting
 
-- **Notifications:** instant push comes through [ntfy](https://f-droid.org/packages/io.heckel.ntfy/) only (no other push apps). Install ntfy, then turn it on in *Settings › Notifications › Delivery › Instant push with ntfy*. ChatCtrl also checks for new messages about every 15 minutes, with or without ntfy, so a push that doesn't arrive still turns into a notification.
+- **Notifications:** instant push comes through [ntfy](https://f-droid.org/packages/io.heckel.ntfy/) by default. Install ntfy, then turn it on in *Settings › Notifications › Delivery › Instant push with ntfy*. Other UnifiedPush apps installed on the phone are listed there too; they work when their push server has its own Matrix gateway (ChatCtrl never uses the public gateway). ChatCtrl also checks for new messages about every 15 minutes, with or without ntfy, so a push that doesn't arrive still turns into a notification.
 - **Reliable notifications:** let both ChatCtrl and ntfy run unrestricted in the background. *Settings › Notifications* warns when either is battery-restricted and has buttons to fix it. A battery-optimised ChatCtrl gets no network while the phone sleeps, so pushed messages can't be fetched; a battery-optimised ntfy loses its connection to your ntfy server. On OPPO, OnePlus and realme phones, also turn on *Allow background activity* in *App info → Battery* for both apps.
 - **Self-hosted ntfy:** your ntfy server's Matrix push gateway (`https://your-ntfy/_matrix/push/v1/notify`, built into ntfy) is used for every push, so your Matrix server must be able to reach it, and the ntfy server needs `base-url` set in its config. ntfy.sh works too. If the gateway can't be found, *Settings › Notifications* shows an error; no other gateway is ever used.
 - **What a push contains:** only the room and message IDs and an unread count, never the message, sender or room name. ChatCtrl then fetches and decrypts the message itself from your homeserver. Your homeserver sends the push to the Matrix gateway of your own ntfy server, which passes it to ntfy on your phone.

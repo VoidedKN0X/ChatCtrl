@@ -308,7 +308,7 @@ fun HomeScreen(
                         Banner(
                             icon = Icons.Outlined.BatteryAlert,
                             title = stringResource(R.string.banner_battery_title),
-                            body = stringResource(if (appHeldBack) R.string.banner_battery_app else R.string.banner_battery_ntfy),
+                            body = if (appHeldBack) stringResource(R.string.banner_battery_app) else stringResource(R.string.banner_battery_ntfy, com.vknxworks.chatctrl.notify.UnifiedPush.label(ctx)),
                             action = stringResource(if (appHeldBack) R.string.warn_allow else R.string.banner_fix),
                             onClick = {
                                 if (appHeldBack) com.vknxworks.chatctrl.notify.Battery.requestUnrestricted(ctx)

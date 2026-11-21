@@ -57,9 +57,22 @@ object Push {
     fun storedEndpoint(context: Context): String? = prefs(context).getString("endpoint", null)
     private fun storedGateway(context: Context): String? = prefs(context).getString("gateway", null)
 
-    /** Turns instant push on. Returns false (and changes nothing) when ntfy isn't installed. */
+    /** The chosen push app's name, for messages. */
+    private fun app(context: Context) = UnifiedPush.label(context)
+
+    /**
+     * Moves instant push to another UnifiedPush app: the registration with the old one and the homeserver's pusher
+     * for it are removed first, then the new app is asked for an endpoint.
+     */
+    suspend fun switchApp(context: Context, session: MatrixSession?, pkg: String): Boolean {
+        if (isEnabled(context) || UnifiedPush.token(context) != null) disable(context, session)
+        UnifiedPush.setDistributor(context, pkg)
+        return enable(context)
+    }
+
+    /** Turns instant push on. Returns false (and changes nothing) when the push app isn't installed. */
     fun enable(context: Context): Boolean {
-        if (!UnifiedPush.isNtfyInstalled(context)) {
+        if (!UnifiedPush.isPushAppInstalled(context)) {
             _status.value = PushStatus.NoNtfy
             return false
         }
@@ -78,7 +91,7 @@ object Push {
         ChatCtrlApp.graph.scope.launch {
             delay(30_000)
             if (_status.value == PushStatus.Registering) {
-                _status.value = PushStatus.Failed(Strings.str(R.string.ntfy_didn_t_answer_open_ntfy_once_so))
+                _status.value = PushStatus.Failed(Strings.str(R.string.ntfy_didn_t_answer_open_ntfy_once_so, app(context)))
             }
         }
     }
@@ -94,13 +107,13 @@ object Push {
         if (previous != null && previous != UnifiedPush.NTFY) {
             // Earlier versions let you pick another push app. Only ntfy is used now.
             Log.w(TAG, "moving push from another push app to ntfy")
-            if (!UnifiedPush.isNtfyInstalled(context)) {
+            if (!UnifiedPush.isPushAppInstalled(context)) {
                 ChatCtrlApp.graph.scope.launch { disable(context, waitForSession()) }
                 return
             }
         }
         p.edit().remove("distributor").apply()
-        if (!UnifiedPush.isNtfyInstalled(context)) {
+        if (!UnifiedPush.isPushAppInstalled(context)) {
             _status.value = PushStatus.NoNtfy
         } else {
             val endpoint = storedEndpoint(context)
@@ -118,7 +131,7 @@ object Push {
     /** Re-checks whether ntfy is (still) installed, e.g. when the Notifications settings come back on screen. */
     fun recheck(context: Context) {
         if (!isEnabled(context)) return
-        val installed = UnifiedPush.isNtfyInstalled(context)
+        val installed = UnifiedPush.isPushAppInstalled(context)
         when {
             !installed -> _status.value = PushStatus.NoNtfy
             _status.value == PushStatus.NoNtfy -> register(context)
@@ -152,7 +165,7 @@ object Push {
         }
         val old = storedEndpoint(context)
         val oldGateway = storedGateway(context)
-        val gateway = when (val g = discoverGateway(endpoint)) {
+        val gateway = when (val g = discoverGateway(context, endpoint)) {
             is Gateway.Found -> g.url
             is Gateway.Problem -> {
                 if (old == endpoint && oldGateway != null && oldGateway != OLD_PUBLIC_GATEWAY) {
@@ -196,10 +209,10 @@ object Push {
         UnifiedPush.dropToken(context)
         _status.value = PushStatus.Failed(
             when (reason) {
-                "NETWORK" -> Strings.str(R.string.ntfy_couldn_t_reach_its_server)
-                "ACTION_REQUIRED" -> Strings.str(R.string.ntfy_needs_your_attention_open_ntfy)
-                "VAPID_REQUIRED" -> Strings.str(R.string.your_ntfy_server_requires_a_vapid)
-                else -> Strings.str(R.string.ntfy_couldn_t_register_chatctrl, reason?.let { " ($it)" } ?: "")
+                "NETWORK" -> Strings.str(R.string.ntfy_couldn_t_reach_its_server, app(context))
+                "ACTION_REQUIRED" -> Strings.str(R.string.ntfy_needs_your_attention_open_ntfy, app(context))
+                "VAPID_REQUIRED" -> Strings.str(R.string.your_ntfy_server_requires_a_vapid, app(context))
+                else -> Strings.str(R.string.ntfy_couldn_t_register_chatctrl, reason?.let { " ($it)" } ?: "", app(context))
             },
         )
     }
@@ -207,7 +220,7 @@ object Push {
     fun onUnregistered(context: Context) {
         UnifiedPush.dropToken(context)
         prefs(context).edit().remove("endpoint").apply()
-        _status.value = PushStatus.Failed(Strings.str(R.string.ntfy_removed_chatctrl_s))
+        _status.value = PushStatus.Failed(Strings.str(R.string.ntfy_removed_chatctrl_s, app(context)))
     }
 
     fun onTempUnavailable() {
@@ -226,10 +239,14 @@ object Push {
         data class Problem(val message: String) : Gateway
     }
 
-    /** ntfy servers run a Matrix push gateway on the same host as the endpoint. Only that one is ever used. */
-    private suspend fun discoverGateway(endpoint: String): Gateway = withContext(Dispatchers.IO) {
-        val url = runCatching { URL(endpoint) }.getOrNull()
-            ?: return@withContext Gateway.Problem(Strings.str(R.string.ntfy_gave_an_endpoint_that_isn_t_a))
+    /**
+     * ntfy servers (and other push servers with a built-in Matrix gateway) answer on the same host as the
+     * endpoint, as the UnifiedPush gateway discovery describes. Only that one is ever used.
+     */
+    private suspend fun discoverGateway(context: Context, endpoint: String): Gateway = withContext(Dispatchers.IO) {
+        val isNtfy = UnifiedPush.distributor(context) == UnifiedPush.NTFY
+        val url = runCatching { URL(endpoint) }.getOrNull()?.takeIf { it.protocol == "https" || it.protocol == "http" }
+            ?: return@withContext Gateway.Problem(Strings.str(R.string.ntfy_gave_an_endpoint_that_isn_t_a, app(context)))
         val port = if (url.port != -1) ":${url.port}" else ""
         val server = "${url.protocol}://${url.host}$port"
         val candidate = "$server$GATEWAY_PATH"
@@ -251,10 +268,11 @@ object Push {
         }.fold(
             onSuccess = {
                 it ?: Gateway.Problem(
-                    Strings.str(R.string.ntfy_no_gateway, server, GATEWAY_PATH),
+                    if (isNtfy) Strings.str(R.string.ntfy_no_gateway, server, GATEWAY_PATH)
+                    else Strings.str(R.string.push_no_gateway, app(context), server, GATEWAY_PATH),
                 )
             },
-            onFailure = { Gateway.Problem(Strings.str(R.string.couldn_t_reach_your_ntfy_server_to, server)) },
+            onFailure = { Gateway.Problem(Strings.str(R.string.couldn_t_reach_your_ntfy_server_to, server, app(context))) },
         )
     }
 

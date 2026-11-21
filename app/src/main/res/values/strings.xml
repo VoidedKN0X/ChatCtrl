@@ -66,7 +66,7 @@
     <string name="app_lock_subtitle">Ask for an app PIN (and optionally your fingerprint) when opening ChatCtrl. Separate from your phone\'s PIN</string>
     <string name="app_lock_footer">While ChatCtrl is locked, your saved sign-in and the key to its encrypted message store are encrypted with your PIN, and the connection to your homeserver is closed until you unlock.</string>
     <string name="app_lock_footer_background">Notifications are on, so the background check and push can still open your account while ChatCtrl is locked: your saved sign-in is then only encrypted with the Android Keystore, as without the app lock. Turn off notifications to keep it sealed with your PIN too. Message text is hidden on the lock screen unless you choose to show it in Notifications.</string>
-    <string name="app_lock_footer_off">ChatCtrl has no analytics or tracking. It only talks to your homeserver, and to your ntfy server through the ntfy app when push is on.</string>
+    <string name="app_lock_footer_off">ChatCtrl has no analytics or tracking. It only talks to your homeserver, and to your push server through ntfy (or the push app you chose) when push is on.</string>
     <string name="lock_prompt_subtitle">Your chats</string>
     <string name="lock_legacy_pin_body">Enter your old ChatCtrl PIN one last time, then choose a new app PIN.</string>
     <string name="lock_forgot_body">The PIN can\'t be recovered, because it encrypts your saved sign-in. ChatCtrl will sign out on this phone and delete its copy of your chats and keys. With recovery set up, your message history comes back after you sign in again; without it, older encrypted messages can\'t be read on this phone any more.</string>
@@ -127,14 +127,14 @@
     <string name="notifications_device_subtitle">New messages, invites and incoming calls</string>
     <string name="notifications_permission_needed">Allow notifications for ChatCtrl in Android settings to get them.</string>
     <string name="delivery">Delivery</string>
-    <string name="delivery_active">Instant through ntfy, plus a background check every ~15 minutes</string>
-    <string name="delivery_registering">Setting up push with ntfy…</string>
-    <string name="delivery_unavailable">ntfy temporarily unavailable: its server can\'t be reached. The background check keeps running.</string>
-    <string name="delivery_no_ntfy">Background check every ~15 minutes until ntfy is installed</string>
+    <string name="delivery_active">Instant through %1$s, plus a background check every ~15 minutes</string>
+    <string name="delivery_registering">Setting up push with %1$s…</string>
+    <string name="delivery_unavailable">%1$s temporarily unavailable: its server can\'t be reached. The background check keeps running.</string>
+    <string name="delivery_no_ntfy">Background check every ~15 minutes until %1$s is installed</string>
     <string name="delivery_failed">Push problem, see below. The background check keeps running.</string>
-    <string name="delivery_off">Background check every ~15 minutes. Tap to turn on instant push through ntfy</string>
-    <string name="warn_no_ntfy_title">ntfy isn\'t installed</string>
-    <string name="warn_no_ntfy_body_on">Instant push comes through ntfy, and it isn\'t on this phone (any more). Until it\'s installed, ChatCtrl only checks for new messages every ~15 minutes.</string>
+    <string name="delivery_off">Background check every ~15 minutes. Tap to turn on instant push through ntfy or another UnifiedPush app</string>
+    <string name="warn_no_ntfy_title">%1$s isn\'t installed</string>
+    <string name="warn_no_ntfy_body_on">Instant push comes through %1$s, and it isn\'t on this phone (any more). Until it\'s installed, or you pick another push app under Delivery, ChatCtrl only checks for new messages every ~15 minutes.</string>
     <string name="warn_no_ntfy_body_off">Instant push comes through ntfy, a free app that keeps one connection to your ntfy server. Without it, ChatCtrl checks for new messages every ~15 minutes.</string>
     <string name="warn_install_ntfy">Install ntfy</string>
     <string name="warn_push_failed_title">Instant push isn\'t working</string>
@@ -148,12 +148,12 @@
     <string name="background_run">Run in the background</string>
     <string name="background_restricted">Restricted by battery optimisation. Tap to allow.</string>
     <string name="background_allowed">Allowed. Messages are fetched even while the phone sleeps.</string>
-    <string name="warn_ntfy_battery_title">ntfy is battery-restricted</string>
-    <string name="warn_ntfy_battery_body">Android can cut ntfy\'s connection to your ntfy server while the phone sleeps, so pushes arrive late or not at all. In ntfy\'s App info, open Battery and choose Unrestricted (on ColorOS also turn on \"Allow background activity\"), or open ntfy and accept its battery prompt.</string>
-    <string name="warn_ntfy_app_info">ntfy\'s App info</string>
-    <string name="warn_open_ntfy">Open ntfy</string>
+    <string name="warn_ntfy_battery_title">%1$s is battery-restricted</string>
+    <string name="warn_ntfy_battery_body">Android can cut the connection %1$s keeps to its push server while the phone sleeps, so pushes arrive late or not at all. In its App info, open Battery and choose Unrestricted (on ColorOS also turn on \"Allow background activity\"), or open %1$s and accept its battery prompt if it shows one.</string>
+    <string name="warn_ntfy_app_info">App info for %1$s</string>
+    <string name="warn_open_ntfy">Open %1$s</string>
     <string name="vendor_limits_title">OPPO / OnePlus / realme background limits</string>
-    <string name="vendor_limits_body">Also open App info › Battery and turn on \"Allow background activity\" (and \"Auto launch\" if shown), for ChatCtrl and for ntfy, or ColorOS may still stop them.</string>
+    <string name="vendor_limits_body">Also open App info › Battery and turn on \"Allow background activity\" (and \"Auto launch\" if shown), for ChatCtrl and for your push app (ntfy), or ColorOS may still stop them.</string>
     <string name="notification_content">Show message content in notifications</string>
     <string name="notification_content_locked">Off by default while the app lock is on</string>
     <string name="notification_content_subtitle">Sender, chat name and message text</string>
@@ -220,7 +220,7 @@
     <string name="banner_notifications_blocked_body">Android isn\'t letting ChatCtrl show notifications, so new messages arrive without telling you. Allow notifications to get them.</string>
     <string name="banner_battery_title">Notifications may be missed</string>
     <string name="banner_battery_app">Battery optimisation cuts ChatCtrl off from the network while the phone sleeps, so messages can\'t be fetched. Let it run in the background.</string>
-    <string name="banner_battery_ntfy">ntfy is battery-optimised, so Android can cut its connection while the phone sleeps and messages arrive late or not at all. Set ntfy\'s battery usage to Unrestricted.</string>
+    <string name="banner_battery_ntfy">%1$s is battery-optimised, so Android can cut its connection while the phone sleeps and messages arrive late or not at all. Set its battery usage to Unrestricted.</string>
     <string name="banner_fix">Fix</string>
     <string name="banner_not_now">Not now</string>
     <string name="banner_verify_title">Confirm it\'s you</string>
@@ -311,7 +311,7 @@
     <string name="calls_full_screen">Full-screen incoming calls</string>
     <string name="calls_full_screen_on">Incoming calls ring on a full screen, also on the lock screen</string>
     <string name="calls_full_screen_off">Not allowed: incoming calls only show as a notification. Tap to allow.</string>
-    <string name="calls_footer">Calls use Element Call, bundled in the app (nothing is loaded from the web), and work with Element X and Element Web. Media goes only to the MatrixRTC service your homeserver announces and the TURN servers it hands out. Incoming calls ring through ntfy push, so instant push must be on.</string>
+    <string name="calls_footer">Calls use Element Call, bundled in the app (nothing is loaded from the web), and work with Element X and Element Web. Media goes only to the MatrixRTC service your homeserver announces and the TURN servers it hands out. Incoming calls ring through push, so instant push must be on.</string>
 
     <!-- Moved from code -->
     <string name="modern">Modern</string>
@@ -455,16 +455,16 @@
     <string name="messages">Messages</string>
     <string name="new_invite">New invite</string>
     <string name="new_message">New message</string>
-    <string name="ntfy_didn_t_answer_open_ntfy_once_so">ntfy didn\'t answer. Open ntfy once so it can start, then try again.</string>
+    <string name="ntfy_didn_t_answer_open_ntfy_once_so">%1$s didn\'t answer. Open it once so it can start, then try again.</string>
     <string name="not_signed_in">Not signed in</string>
     <string name="the_homeserver_refused_the_pusher">The homeserver refused the pusher</string>
-    <string name="ntfy_couldn_t_reach_its_server">ntfy couldn\'t reach its server. ChatCtrl tries again the next time it starts.</string>
-    <string name="ntfy_needs_your_attention_open_ntfy">ntfy needs your attention. Open ntfy, then turn instant push on again.</string>
-    <string name="your_ntfy_server_requires_a_vapid">Your ntfy server requires a VAPID key, which Matrix push doesn\'t use. Use a ntfy server without that requirement.</string>
-    <string name="ntfy_couldn_t_register_chatctrl">ntfy couldn\'t register ChatCtrl%1$s.</string>
-    <string name="ntfy_removed_chatctrl_s">ntfy removed ChatCtrl\'s subscription. Tap to set up instant push again.</string>
-    <string name="ntfy_gave_an_endpoint_that_isn_t_a">ntfy gave an endpoint that isn\'t a valid address.</string>
-    <string name="couldn_t_reach_your_ntfy_server_to">Couldn\'t reach your ntfy server (%1$s) to find its Matrix push gateway. ChatCtrl tries again the next time it starts.</string>
+    <string name="ntfy_couldn_t_reach_its_server">%1$s couldn\'t reach its server. ChatCtrl tries again the next time it starts.</string>
+    <string name="ntfy_needs_your_attention_open_ntfy">%1$s needs your attention. Open it, then turn instant push on again.</string>
+    <string name="your_ntfy_server_requires_a_vapid">%1$s (or its server) requires a VAPID key, which Matrix push doesn\'t use. Use a push app or server without that requirement, such as ntfy.</string>
+    <string name="ntfy_couldn_t_register_chatctrl">%2$s couldn\'t register ChatCtrl%1$s.</string>
+    <string name="ntfy_removed_chatctrl_s">%1$s removed ChatCtrl\'s subscription. Tap to set up instant push again.</string>
+    <string name="ntfy_gave_an_endpoint_that_isn_t_a">%1$s gave an endpoint that isn\'t a valid address.</string>
+    <string name="couldn_t_reach_your_ntfy_server_to">Couldn\'t reach the push server %2$s uses (%1$s) to find its Matrix push gateway. ChatCtrl tries again the next time it starts.</string>
     <string name="sticker_2">Sticker</string>
     <string name="reacted_to_your_message">Reacted to your message</string>
     <string name="incoming_call">📞 Incoming call</string>
@@ -761,7 +761,7 @@
     <string name="confirm_with_your_password">Confirm with your password</string>
     <string name="device_id_active">%1$s · active %2$s</string>
     <string name="notification_delivery">Notification delivery</string>
-    <string name="instant_push_with_ntfy">Instant push with ntfy</string>
+    <string name="instant_push_with_ntfy">Instant push with %1$s</string>
     <string name="plus_the_background_check">Plus the background check</string>
     <string name="ntfy_isn_t_installed_on_this_phone">ntfy isn\'t installed on this phone</string>
     <string name="background_check_only">Background check only</string>
@@ -824,7 +824,7 @@
     <string name="verification_was_cancelled">Verification was cancelled.</string>
     <string name="http_warning_body">%1$s uses plain http. Your password, access token and messages would travel over the network unencrypted, so anyone on the same network could read them or take over your account. Only continue for a server on a network you trust.</string>
     <string name="http_warning_wellknown">%1$s points to %2$s, which uses plain http. Your password, access token and messages would travel over the network unencrypted. Only continue for a server on a network you trust.</string>
-    <string name="push_explainer">Instant push comes through ntfy, which keeps one connection to your ntfy server (ntfy.sh or your own) for all your apps. Your homeserver sends only the message ID, through that ntfy server\'s own Matrix gateway; ChatCtrl then fetches and decrypts the message itself. The background check every ~15 minutes keeps running either way, so nothing is missed if a push doesn\'t arrive.</string>
+    <string name="push_explainer">Instant push comes through ntfy, which keeps one connection to your ntfy server (ntfy.sh or your own) for all your apps. Your homeserver sends only the message ID, through that ntfy server\'s own Matrix gateway; ChatCtrl then fetches and decrypts the message itself. The background check every ~15 minutes keeps running either way, so nothing is missed if a push doesn\'t arrive. Other UnifiedPush apps on this phone are listed too; they only work when their push server has its own Matrix gateway, because ChatCtrl never sends pushes through anyone else\'s gateway.</string>
     <string name="ntfy_no_gateway">Your ntfy server (%1$s) has no Matrix push gateway at %2$s, so your homeserver can\'t push through it. The gateway is built into ntfy: update the server (and make sure base-url is set to its public address), then try again.</string>
     <string name="backup_turning_on">Turning on backup…</string>
     <string name="backup_resuming">Resuming backup…</string>
@@ -979,4 +979,28 @@
     <string name="verified_devices_only_off_title">Turn off verified devices only?</string>
     <string name="verified_devices_only_off_body">Your encrypted messages go to every device of the people in a chat again, verified or not, and messages from unverified devices are shown with a warning. ChatCtrl restarts to apply it.</string>
     <string name="verified_devices_only_restart">Restart</string>
+
+    <!-- Other UnifiedPush apps -->
+    <string name="push_other_app_note">Works when its push server has its own Matrix gateway</string>
+    <string name="push_no_gateway">The push server %1$s uses (%2$s) has no Matrix push gateway at %3$s, so your homeserver can\'t push through it. ChatCtrl never uses another gateway. Use ntfy, or a push server that has the Matrix gateway built in.</string>
+
+    <!-- Back up and restore settings -->
+    <string name="backup_title">Back up and restore</string>
+    <string name="backup_footer">The file holds ChatCtrl\'s own settings only: how chats look and behave, and the privacy switches. Nothing about your account is in it: no sign-in, keys, PIN, server names or drafts. The app lock and notification settings stay out, so a file can\'t weaken them.</string>
+    <string name="backup_save">Save settings to a file</string>
+    <string name="backup_save_sub">A small JSON file in a place you pick</string>
+    <string name="backup_restore">Restore settings from a file</string>
+    <string name="backup_restore_sub">Shows what will change and asks first</string>
+    <string name="backup_saved">Settings saved</string>
+    <string name="backup_save_failed">Couldn\'t save the file</string>
+    <string name="backup_not_valid">That isn\'t a ChatCtrl settings file</string>
+    <string name="backup_too_new">That file was made by a newer ChatCtrl. Update the app first.</string>
+    <string name="backup_nothing_to_change">Nothing to change: your settings already match the file</string>
+    <string name="backup_restore_title">Restore these settings?</string>
+    <string name="backup_restore_body">These settings will be replaced:\n\n%1$s\n\nPrivacy switches are only ever changed to the more private side.</string>
+    <string name="backup_change_line">%1$s: %2$s → %3$s</string>
+    <string name="backup_restore_confirm">Restore</string>
+    <string name="backup_restored">Settings restored</string>
+    <string name="backup_value_on">on</string>
+    <string name="backup_value_off">off</string>
 </resources>

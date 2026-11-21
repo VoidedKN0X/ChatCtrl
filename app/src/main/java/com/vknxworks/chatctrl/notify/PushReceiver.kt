@@ -12,10 +12,10 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 /**
- * Receives what ntfy hands over: new endpoints, registration errors and push messages from your homeserver.
+ * Receives what the push app (ntfy, or the UnifiedPush app chosen in Settings) hands over: new endpoints, registration errors and push messages from your homeserver.
  *
  * It has to be exported for ntfy to reach it, so every broadcast must carry the secret token of our registration
- * (and, from Android 14, come from ntfy) or it's ignored. A push only names a room and an event; the event itself is
+ * (and, from Android 14, come from that push app) or it's ignored. A push only names a room and an event; the event itself is
  * then fetched from the homeserver, so a forged push can't inject notification text.
  */
 class PushReceiver : BroadcastReceiver() {
@@ -26,7 +26,7 @@ class PushReceiver : BroadcastReceiver() {
         // Compared in constant time, so the token can't be guessed a character at a time.
         if (!java.security.MessageDigest.isEqual(token.toByteArray(), own.toByteArray())) return
         val sender = sentFromPackage
-        if (sender != null && sender != UnifiedPush.NTFY) return
+        if (sender != null && sender != UnifiedPush.distributor(context)) return
         // Keep the CPU awake while the message is saved and the fetch job is handed to Android.
         val wakeLock = context.getSystemService(PowerManager::class.java)
             ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ChatCtrl:push")

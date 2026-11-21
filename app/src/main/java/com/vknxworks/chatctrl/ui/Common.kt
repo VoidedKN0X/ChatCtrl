@@ -352,7 +352,7 @@ data class PushHealth(
 private fun readPushHealth(context: android.content.Context) = PushHealth(
     appUnrestricted = com.vknxworks.chatctrl.notify.Battery.isUnrestricted(context),
     appBackgroundRestricted = com.vknxworks.chatctrl.notify.Battery.isBackgroundRestricted(context),
-    ntfyInstalled = com.vknxworks.chatctrl.notify.UnifiedPush.isNtfyInstalled(context),
+    ntfyInstalled = com.vknxworks.chatctrl.notify.UnifiedPush.isPushAppInstalled(context),
     ntfyUnrestricted = com.vknxworks.chatctrl.notify.Battery.isNtfyUnrestricted(context),
     notificationsAllowed = com.vknxworks.chatctrl.notify.NotificationAccess.allowed(context),
 )

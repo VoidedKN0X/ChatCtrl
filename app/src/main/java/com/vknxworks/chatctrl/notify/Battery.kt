@@ -40,18 +40,18 @@ object Battery {
      * deep sleep and pushes arrive late or not at all. Android answers this for other apps too.
      */
     fun isNtfyUnrestricted(context: Context): Boolean =
-        context.getSystemService(PowerManager::class.java)?.isIgnoringBatteryOptimizations(UnifiedPush.NTFY) == true
+        context.getSystemService(PowerManager::class.java)?.isIgnoringBatteryOptimizations(UnifiedPush.distributor(context)) == true
 
     /** ntfy's App info page, where Battery › Unrestricted (and on ColorOS "Allow background activity") is set. */
     fun openNtfyAppInfo(context: Context) {
-        if (!launch(context, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${UnifiedPush.NTFY}")))) {
+        if (!launch(context, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${UnifiedPush.distributor(context)}")))) {
             launch(context, Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
         }
     }
 
     /** Opens ntfy itself (it offers to turn off its own battery optimisation). */
     fun openNtfy(context: Context): Boolean {
-        val intent = context.packageManager.getLaunchIntentForPackage(UnifiedPush.NTFY) ?: return false
+        val intent = context.packageManager.getLaunchIntentForPackage(UnifiedPush.distributor(context)) ?: return false
         return launch(context, intent)
     }
 
@@ -97,7 +97,7 @@ object Battery {
      */
     fun shouldShowBanner(context: Context, notificationsOn: Boolean): Boolean {
         if (!notificationsOn) return false
-        val ntfyHeldBack = Push.isEnabled(context) && UnifiedPush.isNtfyInstalled(context) && !isNtfyUnrestricted(context)
+        val ntfyHeldBack = Push.isEnabled(context) && UnifiedPush.isPushAppInstalled(context) && !isNtfyUnrestricted(context)
         if (isUnrestricted(context) && !isBackgroundRestricted(context) && !ntfyHeldBack) return false
         val p = prefs(context)
         val dismissed = p.getLong("dismissed_at", 0)
