@@ -18,7 +18,8 @@ class RoomViewModel(
     withTimeline: Boolean = true,
     val focusEventId: String? = null,
 ) : ViewModel() {
-    private val sdkRoom = session.getRoom(roomId)
+    /** The SDK's room object, for the few calls that go to it directly (sending a sticker). */
+    val sdkRoom = session.getRoom(roomId)
     val room: RoomController? = sdkRoom?.let { RoomController(session, it) }
     val timeline: TimelineController? = if (withTimeline) sdkRoom?.let { TimelineController(session, it, threadRootId, focusEventId) } else null
 

@@ -16,7 +16,8 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Sign in** with OAuth (including creating an account), username and password, single sign-on, or a **QR code** from a device that's already signed in
 - **Link new device**: sign a new phone or computer in with a QR code, already verified (servers with Matrix Authentication Service and QR sign-in)
 - **End-to-end encryption** by default, with device verification and key backup
-- **Messages**: replies, threads, reactions, edits, polls, voice messages, images, videos, files and locations; stickers and GIFs other people send show in the chat
+- **Messages**: replies, threads, reactions, edits, polls, voice messages, images, videos, files and locations
+- **Stickers and GIFs**: send stickers from your own pack and from room packs (the same Matrix image packs FluffyChat, Cinny and Nheko use), add pictures or received stickers to your pack, and send GIFs from your phone; no GIF search service
 - **Quick gestures**: swipe a message to reply, double-tap to react, and see who has read up to where
 - **Failed messages explained**: the reason shows under a message that wasn't sent; copy it, retry one or retry all
 - **Private read receipts** and a switch for **typing notices**, so others don't see what you've read or that you're typing

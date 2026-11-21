@@ -86,6 +86,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Gif
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -251,6 +252,8 @@ fun RoomScreen(
     var viewingLocation by remember { mutableStateOf<UiContent.Location?>(null) }
     var pendingAttachment by remember { mutableStateOf<Uri?>(null) }
     var pendingAttachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var pickingSticker by remember { mutableStateOf(false) }
+    val stickers = remember { com.vknxworks.chatctrl.matrix.StickerService(session) }
     var suspiciousLink by remember { mutableStateOf<Pair<String, String>?>(null) }
     var highlighted by remember { mutableStateOf<String?>(null) }
     var emojiPickerFor by remember { mutableStateOf<TimelineEntry.Message?>(null) }
@@ -402,6 +405,8 @@ fun RoomScreen(
     }
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)) { uris -> picked(uris) }
     val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> picked(uris) }
+    // Only GIFs from the phone's pictures; they are sent as they are, so they stay animated.
+    val pickGif = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)) { uris -> picked(uris) }
 
     fun send() {
         val text = composer.text.trim()
@@ -645,6 +650,12 @@ fun RoomScreen(
                         onDismissAttach = { attachMenu = false },
                         onPickMedia = { attachMenu = false; com.vknxworks.chatctrl.ui.lock.AppLock.expectReturn(); pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)) },
                         onPickFile = { attachMenu = false; com.vknxworks.chatctrl.ui.lock.AppLock.expectReturn(); pickFile.launch(arrayOf("*/*")) },
+                        onSticker = { attachMenu = false; pickingSticker = true },
+                        onGif = {
+                            attachMenu = false
+                            com.vknxworks.chatctrl.ui.lock.AppLock.expectReturn()
+                            pickGif.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.SingleMimeType("image/gif")))
+                        },
                         onPoll = { attachMenu = false; creatingPoll = true },
                         onLocation = { attachMenu = false; pickingLocation = true },
                         recording = recording,
@@ -752,6 +763,20 @@ fun RoomScreen(
             copyable?.takeIf { it.isNotBlank() }?.let { text ->
                 SettingRow(Icons.Outlined.ContentCopy, stringResource(R.string.copy_text)) { copyText(context, Strings.str(R.string.message), text, sensitive = true); sheetFor = null }
             }
+            (item.content as? UiContent.Image)?.takeIf { it.isSticker }?.let { sticker ->
+                // Only pictures that sit on the server unencrypted can be pointed at from a pack.
+                val url = remember(sticker.sourceJson) { plainMxcUrl(sticker.sourceJson) }
+                if (url != null) {
+                    SettingRow(Icons.Outlined.EmojiEmotions, stringResource(R.string.stickers_add_to_mine)) {
+                        sheetFor = null
+                        scope.launch {
+                            runCatching { stickers.addToMine(url, sticker.filename, sticker.width, sticker.height, sticker.mime) }
+                                .onSuccess { snackbar.showSnackbar(Strings.str(R.string.stickers_added)) }
+                                .onFailure { snackbar.showSnackbar(it.userMessage().ifBlank { Strings.str(R.string.stickers_add_failed) }) }
+                        }
+                    }
+                }
+            }
             if (item.eventId != null && item.status == SendStatus.SENT && item.content.canForward()) {
                 SettingRow(Icons.AutoMirrored.Outlined.Forward, stringResource(R.string.forward)) { forwarding = item; sheetFor = null }
             }
@@ -823,6 +848,23 @@ fun RoomScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    if (pickingSticker) {
+        StickerSheet(
+            session, roomId,
+            onDismiss = { pickingSticker = false },
+            onError = { msg -> scope.launch { snackbar.showSnackbar(msg.ifBlank { Strings.str(R.string.stickers_send_failed) }) } },
+        ) { sticker ->
+            pickingSticker = false
+            val replyTo = (mode as? ComposerMode.Reply)?.item?.eventId
+            mode = ComposerMode.Normal
+            followLatest = true
+            scope.launch {
+                runCatching { stickers.send(vm.sdkRoom ?: error(Strings.str(R.string.stickers_send_failed)), sticker, replyTo, threadRootId) }
+                    .onFailure { snackbar.showSnackbar(it.userMessage().ifBlank { Strings.str(R.string.stickers_send_failed) }) }
             }
         }
     }
@@ -990,6 +1032,11 @@ fun RoomScreen(
     }
 }
 
+/** The mxc:// address of a picture that isn't encrypted (a media source of the form {"url": "mxc://…"}), or null. */
+private fun plainMxcUrl(sourceJson: String): String? = runCatching {
+    org.json.JSONObject(sourceJson).optString("url").takeIf { it.startsWith("mxc://") }
+}.getOrNull()
+
 /** The name another app gives a shared or picked file, for showing in a list. */
 private fun displayNameOf(context: android.content.Context, uri: Uri): String = runCatching {
     context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
@@ -1061,6 +1108,8 @@ private fun Composer(
     onPickMedia: () -> Unit,
     onPickFile: () -> Unit,
     onPoll: () -> Unit,
+    onSticker: () -> Unit = {},
+    onGif: () -> Unit = {},
     onLocation: () -> Unit = {},
     recording: Boolean = false,
     levels: () -> List<Float> = { emptyList() },
@@ -1134,6 +1183,8 @@ private fun Composer(
                 com.vknxworks.chatctrl.ui.components.CtrlDropdownMenu(expanded = attachMenu, onDismissRequest = onDismissAttach) {
                     com.vknxworks.chatctrl.ui.components.CtrlMenuItem(stringResource(R.string.photo_or_video), onPickMedia, Icons.Outlined.Image)
                     com.vknxworks.chatctrl.ui.components.CtrlMenuItem(stringResource(R.string.file_2), onPickFile, Icons.Outlined.AttachFile)
+                    com.vknxworks.chatctrl.ui.components.CtrlMenuItem(stringResource(R.string.stickers), onSticker, Icons.Outlined.EmojiEmotions)
+                    com.vknxworks.chatctrl.ui.components.CtrlMenuItem(stringResource(R.string.gif), onGif, Icons.Outlined.Gif)
                     com.vknxworks.chatctrl.ui.components.CtrlMenuItem(stringResource(R.string.poll), onPoll, Icons.Outlined.BarChart)
                     com.vknxworks.chatctrl.ui.components.CtrlMenuItem(stringResource(R.string.location_3), onLocation, Icons.Outlined.Place)
                 }
