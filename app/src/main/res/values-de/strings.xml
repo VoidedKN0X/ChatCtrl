@@ -61,7 +61,10 @@
     <string name="app_lock_footer_off">ChatCtrl hat keine Analysen und kein Tracking. Die App spricht nur mit deinem Homeserver und, wenn Push an ist, über ntfy (oder die gewählte Push-App) mit deinem Push-Server.</string>
     <string name="lock_prompt_subtitle">Deine Chats</string>
     <string name="lock_legacy_pin_body">Gib ein letztes Mal deine alte ChatCtrl-PIN ein und lege dann eine neue App-PIN fest.</string>
-    <string name="lock_forgot_body">Die PIN lässt sich nicht wiederherstellen, weil sie deine gespeicherte Anmeldung verschlüsselt. ChatCtrl meldet sich auf diesem Telefon ab und löscht seine Kopie deiner Chats und Schlüssel. Mit eingerichteter Wiederherstellung kommt dein Nachrichtenverlauf nach der erneuten Anmeldung zurück; ohne sie können ältere verschlüsselte Nachrichten auf diesem Telefon nicht mehr gelesen werden.</string>
+    <string name="lock_forgot_body">Die PIN lässt sich nicht wiederherstellen, weil sie deine gespeicherte Anmeldung verschlüsselt. ChatCtrl meldet sich auf diesem Telefon ab und löscht seine Kopie deiner Chats und Schlüssel. Mit eingerichteter Wiederherstellung kommt dein Nachrichtenverlauf nach der erneuten Anmeldung zurück; ohne sie können ältere verschlüsselte Nachrichten auf diesem Telefon nicht mehr gelesen werden. Wenn dein Smartphone eine Displaysperre hat, bestätigst du zuerst damit.</string>
+    <string name="lock_reset_prompt_title">App-Sperre von ChatCtrl zurücksetzen</string>
+    <string name="lock_reset_prompt_subtitle">Bestätige mit der Displaysperre deines Smartphones, dass du es bist</string>
+    <string name="lock_reset_prompt_failed">Displaysperre konnte nicht angezeigt werden</string>
     <string name="lock_forgot_confirm">Abmelden und zurücksetzen</string>
     <string name="lock_migrate_intro">Die App-Sperre von ChatCtrl verwendet jetzt dieselbe App-PIN wie die anderen Ctrl-Apps, mit mindestens 6 Ziffern. Solange die App gesperrt ist, ist deine gespeicherte Anmeldung damit verschlüsselt.</string>
     <string name="lock_enable_intro">Mindestens %1$d Ziffern, anders als die PIN deines Telefons. Wenn du sie vergisst, kommst du nur durch erneutes Anmelden wieder rein.</string>

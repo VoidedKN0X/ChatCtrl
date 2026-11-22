@@ -81,7 +81,8 @@ class TimelineController(
     private val handles = mutableListOf<TaskHandle>()
     private val diffs = Channel<List<TimelineDiff>>(Channel.UNLIMITED)
     private val items = ArrayList<TimelineEntry>()
-    private val failedHandles = HashMap<String, SendHandle>()
+    // Written by the diff collector and read by retry/cancel in other coroutines on the IO pool.
+    private val failedHandles = java.util.concurrent.ConcurrentHashMap<String, SendHandle>()
     private val requestedReplies = HashSet<String>()
 
     private val _entries = MutableStateFlow<List<TimelineEntry>>(emptyList())
@@ -196,6 +197,11 @@ class TimelineController(
     /** Hands the current list to the screen. Called once after a run of [apply]s. */
     private fun publish() {
         _entries.value = ArrayList(items)
+        // Failed messages that left the timeline (cancelled, or replaced once sent) drop their handle too.
+        if (failedHandles.isNotEmpty()) {
+            val live = items.mapTo(HashSet()) { it.key }
+            failedHandles.keys.retainAll(live)
+        }
     }
 
     private fun map(item: TimelineItem): TimelineEntry = item.use { ti ->
@@ -298,7 +304,10 @@ class TimelineController(
         }
 
         var sendError: String? = null
-        val status = when (val s = e.localSendState) {
+        val sendState = e.localSendState
+        // Only failed sends keep a handle; one that is sending again or was sent lets its native handle go.
+        if (sendState !is EventSendState.SendingFailed) failedHandles.remove(key)
+        val status = when (val s = sendState) {
             null, is EventSendState.Sent -> SendStatus.SENT
             is EventSendState.NotSentYet -> SendStatus.SENDING
             is EventSendState.SendingFailed -> {
@@ -625,7 +634,14 @@ class TimelineController(
         val file = File(dir, "${System.currentTimeMillis()}_$safeName")
         if (!file.canonicalPath.startsWith(dir.canonicalPath + File.separator)) error(Strings.str(R.string.bad_file_name))
         try {
-            resolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } } ?: error(Strings.str(R.string.couldn_t_read_the_file))
+            fun copyIn() {
+                resolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } } ?: error(Strings.str(R.string.couldn_t_read_the_file))
+            }
+            copyIn()
+            // A picture from "File" or shared by another app can still say where and when it was taken: strip
+            // that first (JPEG, PNG, WebP). If the rewrite fails, the untouched original is copied again so the
+            // send itself never breaks because of this.
+            if (ExifStrip.strip(file, mime) == ExifStrip.Result.FAILED) copyIn()
             sendPrepared(t, file, mime, caption, replyTo)
         } finally {
             // Plain copy of what was sent: removed once the SDK has queued the upload.

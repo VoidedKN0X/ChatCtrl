@@ -63,7 +63,10 @@
     <string name="app_lock_footer_off">ChatCtrl heeft geen analytics of tracking. De app praat alleen met je homeserver, en met je pushserver via ntfy (of de push-app die je koos) als push aanstaat.</string>
     <string name="lock_prompt_subtitle">Je chats</string>
     <string name="lock_legacy_pin_body">Voer je oude ChatCtrl-pincode nog één keer in en kies daarna een nieuwe app-pincode.</string>
-    <string name="lock_forgot_body">De pincode kan niet worden hersteld, omdat ze je opgeslagen aanmelding versleutelt. ChatCtrl meldt zich af op deze telefoon en wist zijn kopie van je chats en sleutels. Als herstel is ingesteld, komt je berichtgeschiedenis terug nadat je je opnieuw aanmeldt; zonder herstel kunnen oudere versleutelde berichten op deze telefoon niet meer worden gelezen.</string>
+    <string name="lock_forgot_body">De pincode kan niet worden hersteld, omdat ze je opgeslagen aanmelding versleutelt. ChatCtrl meldt zich af op deze telefoon en wist zijn kopie van je chats en sleutels. Als herstel is ingesteld, komt je berichtgeschiedenis terug nadat je je opnieuw aanmeldt; zonder herstel kunnen oudere versleutelde berichten op deze telefoon niet meer worden gelezen. Heeft je telefoon een schermvergrendeling, dan bevestig je eerst daarmee.</string>
+    <string name="lock_reset_prompt_title">App-vergrendeling van ChatCtrl resetten</string>
+    <string name="lock_reset_prompt_subtitle">Bevestig met de schermvergrendeling van je telefoon dat jij het bent</string>
+    <string name="lock_reset_prompt_failed">De schermvergrendeling kon niet getoond worden</string>
     <string name="lock_forgot_confirm">Afmelden en resetten</string>
     <string name="lock_migrate_intro">De app-vergrendeling van ChatCtrl gebruikt nu dezelfde app-pincode als de andere Ctrl-apps, met minstens 6 cijfers. Je opgeslagen aanmelding is ermee versleuteld terwijl de app vergrendeld is.</string>
     <string name="lock_enable_intro">Minstens %1$d cijfers, anders dan de pincode van je telefoon. Als je ze vergeet, kun je alleen terug binnen door je opnieuw aan te melden.</string>

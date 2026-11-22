@@ -61,7 +61,10 @@
     <string name="app_lock_footer_off">ChatCtrl n\'a ni statistiques ni pistage. Il communique uniquement avec votre serveur d\'accueil, et avec votre serveur push via ntfy (ou l\'appli push choisie) quand le push est activé.</string>
     <string name="lock_prompt_subtitle">Vos discussions</string>
     <string name="lock_legacy_pin_body">Saisissez une dernière fois votre ancien code PIN ChatCtrl, puis choisissez un nouveau code PIN d\'appli.</string>
-    <string name="lock_forgot_body">Le code PIN ne peut pas être récupéré, car il chiffre votre connexion enregistrée. ChatCtrl se déconnectera sur ce téléphone et supprimera sa copie de vos discussions et clés. Si la récupération est configurée, votre historique revient après la reconnexion ; sinon, les anciens messages chiffrés ne pourront plus être lus sur ce téléphone.</string>
+    <string name="lock_forgot_body">Le code PIN ne peut pas être récupéré, car il chiffre votre connexion enregistrée. ChatCtrl se déconnectera sur ce téléphone et supprimera sa copie de vos discussions et clés. Si la récupération est configurée, votre historique revient après la reconnexion ; sinon, les anciens messages chiffrés ne pourront plus être lus sur ce téléphone. Si votre téléphone a un verrouillage d\'écran, vous confirmerez d\'abord avec celui-ci.</string>
+    <string name="lock_reset_prompt_title">Réinitialiser le verrouillage de ChatCtrl</string>
+    <string name="lock_reset_prompt_subtitle">Utilisez le verrouillage d\'écran de votre téléphone pour confirmer votre identité</string>
+    <string name="lock_reset_prompt_failed">Impossible d\'afficher le verrouillage d\'écran</string>
     <string name="lock_forgot_confirm">Se déconnecter et réinitialiser</string>
     <string name="lock_migrate_intro">Le verrouillage de ChatCtrl utilise maintenant le même code PIN d\'appli que les autres applis Ctrl, avec au moins 6 chiffres. Votre connexion enregistrée est chiffrée avec ce code tant que l\'appli est verrouillée.</string>
     <string name="lock_enable_intro">Au moins %1$d chiffres, différent du code PIN de votre téléphone. Si vous l\'oubliez, la seule solution est de vous reconnecter.</string>

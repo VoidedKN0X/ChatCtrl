@@ -2,6 +2,21 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+### Security
+
+- **"Forgot PIN?" now asks for your phone's own screen lock first.** Before, anyone holding your unlocked phone could tap **Forgot PIN?** on ChatCtrl's lock screen (also on the one-time screen after updating from the old PIN lock) and reset it, signing out to get past the app lock. Now, after you confirm in the dialog, Android shows its own screen-lock prompt (your phone PIN, pattern or password, or a strong fingerprint) and ChatCtrl only resets once that succeeds. Cancelling the prompt changes nothing. If your phone has no screen lock, the reset works as before, straight after the confirmation. The dialog text says so in all four languages. Not yet tried on a phone.
+
+### Privacy
+
+- **Photos sent through "File" or shared to ChatCtrl no longer reveal where they were taken.** Android's photo picker (the Photos and GIF buttons) already removed the location, but a picture you browsed to with **File**, or shared to ChatCtrl from a camera app, gallery or file manager, went out with its full EXIF details: the GPS position, the time it was taken and the camera's serial number, visible to everyone in the room and their servers. For JPEG, PNG and WebP pictures, ChatCtrl now removes all GPS details, the capture time, the camera and lens serial numbers and the camera owner's name from its own copy before sending; the picture itself, its rotation and other details stay as they are, and the original on your phone isn't touched. If removing them fails for some reason, the picture is still sent (as before) rather than the send failing. HEIC/HEIF pictures and videos sent this way are still sent as they are (the README says so). Not yet tried on a phone.
+
+### Fixed
+
+- **Large attachments open instead of failing.** Opening, saving or sharing a file, video or audio attachment loaded the whole file into ChatCtrl's memory first, so a very large one (hundreds of MB, from another server for example) failed with "Couldn't open" and could make the rest of the app run out of memory. The Matrix SDK now downloads (and decrypts) it straight to a file in the same private cache folder, which is cleaned up as before (after a day and when ChatCtrl locks).
+- **Retry and Cancel on a failed message are more reliable.** The list of failed messages that **Retry**, **Retry all** and **Cancel** use was changed from several places at once without protection, which could lose a message's entry (so Retry did nothing) when you tapped **Retry all** while new updates arrived. It is now safe to use from several places at once, and messages that were sent or removed no longer stay in it until you leave the chat.
+
 ## v2.4.1 (2026-11-22)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

@@ -69,7 +69,10 @@
     <string name="app_lock_footer_off">ChatCtrl has no analytics or tracking. It only talks to your homeserver, and to your push server through ntfy (or the push app you chose) when push is on.</string>
     <string name="lock_prompt_subtitle">Your chats</string>
     <string name="lock_legacy_pin_body">Enter your old ChatCtrl PIN one last time, then choose a new app PIN.</string>
-    <string name="lock_forgot_body">The PIN can\'t be recovered, because it encrypts your saved sign-in. ChatCtrl will sign out on this phone and delete its copy of your chats and keys. With recovery set up, your message history comes back after you sign in again; without it, older encrypted messages can\'t be read on this phone any more.</string>
+    <string name="lock_forgot_body">The PIN can\'t be recovered, because it encrypts your saved sign-in. ChatCtrl will sign out on this phone and delete its copy of your chats and keys. With recovery set up, your message history comes back after you sign in again; without it, older encrypted messages can\'t be read on this phone any more. If your phone has a screen lock, you\'ll confirm with it first.</string>
+    <string name="lock_reset_prompt_title">Reset ChatCtrl\'s app lock</string>
+    <string name="lock_reset_prompt_subtitle">Use your phone\'s screen lock to confirm it\'s you</string>
+    <string name="lock_reset_prompt_failed">Couldn\'t show the screen lock prompt</string>
     <string name="lock_forgot_confirm">Sign out and reset</string>
     <string name="lock_migrate_intro">ChatCtrl\'s app lock now uses the same app PIN as the other Ctrl apps, with at least 6 digits. Your saved sign-in is encrypted with it while the app is locked.</string>
     <string name="lock_enable_intro">At least %1$d digits, different from your phone\'s PIN. If you forget it, the only way back in is to sign in again.</string>

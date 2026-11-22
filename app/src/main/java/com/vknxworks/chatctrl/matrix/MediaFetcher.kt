@@ -79,6 +79,9 @@ internal fun sha256Hex(s: String): String =
 object MediaFiles {
     private fun mediaDir(context: Context) = File(context.cacheDir, "media").apply { mkdirs() }
 
+    /** A plain type/subtype the SDK can parse; anything else is downloaded as application/octet-stream. */
+    private val MIME = Regex("^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,63}/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}$")
+
     /** Folders that hold decrypted copies of attachments and voice messages, and outgoing uploads. */
     private fun plainDirs(context: Context) = listOf(File(context.cacheDir, "media"), File(context.cacheDir, "upload"), File(context.cacheDir, "shared"))
 
@@ -94,10 +97,14 @@ object MediaFiles {
             purgeOldThrottled(context)
             if (target.exists() && target.length() > 0) return@withContext target.also { it.setLastModified(System.currentTimeMillis()) }
             MediaSource.fromJson(sourceJson).use { src ->
-                val bytes = session.client.getMediaContent(src)
-                val tmp = File(dir, target.name + ".part")
-                tmp.writeBytes(bytes)
-                if (!tmp.renameTo(target)) { tmp.delete(); error(Strings.str(R.string.couldn_t_store_the_file)) }
+                // Straight to a file by the SDK (decrypted there too), so a large video or file never has to fit
+                // in the app's memory as one byte array. Its temporary file sits in cache/media, so it is
+                // covered by the same purge and lock wipe; the handle deletes it if it isn't moved.
+                val fileMime = mime.takeIf { MIME.matches(it) } ?: "application/octet-stream"
+                session.client.getMediaFile(src, null, fileMime, false, dir.absolutePath).use { handle ->
+                    val moved = runCatching { handle.persist(target.absolutePath) }.getOrDefault(false)
+                    if (!moved || !target.exists()) { target.delete(); error(Strings.str(R.string.couldn_t_store_the_file)) }
+                }
             }
             target
         }
