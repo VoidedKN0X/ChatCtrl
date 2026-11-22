@@ -92,9 +92,6 @@ fun redactSecrets(text: String): String = text
 
 /**
  * For the app's long-lived coroutine scopes: an unexpected error in background work (an SDK call failing while
- * the app closes, a room going away mid-update) is dropped instead of crashing the whole app. Only the error's
- * type is logged (release builds drop logs anyway), never its message, which can name rooms, users or servers.
+ * the app closes, a room going away mid-update) is dropped instead of crashing the whole app.
  */
-val LogAndContinue = kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
-    android.util.Log.w("ChatCtrl", "background task failed: ${e.javaClass.simpleName}")
-}
+val IgnoreAndContinue = kotlinx.coroutines.CoroutineExceptionHandler { _, _ -> }

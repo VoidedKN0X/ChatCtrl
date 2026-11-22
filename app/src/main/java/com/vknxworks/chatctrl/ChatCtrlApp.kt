@@ -1,7 +1,6 @@
 package com.vknxworks.chatctrl
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -28,25 +27,23 @@ class ChatCtrlApp : Application(), SingletonImageLoader.Factory {
         if (AppRestart.isRestartProcess()) return
         instance = this
         Strings.init(this)
-        com.vknxworks.chatctrl.matrix.ConnectionLog.init(this)
         // Native SDK first: it needs the Context for TLS checks, then logging/runtime setup.
         runCatching { org.matrix.rustsdk.Android.init(this) }
-            .onFailure { Log.e("ChatCtrl", "Rust SDK Android init failed", it) }
         runCatching {
             initPlatform(
                 config = TracingConfiguration(
-                    logLevel = if (BuildConfig.DEBUG) LogLevel.DEBUG else LogLevel.ERROR,
+                    logLevel = LogLevel.ERROR,
                     traceLogPacks = emptyList(),
                     extraTargets = emptyList(),
-                    // Release builds don't send the SDK's logs to logcat at all (they can name rooms, users,
-                    // servers and media URLs), the same as Element X.
-                    writeToStdoutOrSystem = BuildConfig.DEBUG,
+                    // The SDK's logs never go to logcat (they can name rooms, users, servers and media URLs),
+                    // the same as Element X's release builds.
+                    writeToStdoutOrSystem = false,
                     writeToFiles = null,
                     sentryConfig = null,
                 ),
                 useLightweightTokioRuntime = false,
             )
-        }.onFailure { Log.e("ChatCtrl", "Rust SDK init failed", it) }
+        }
 
         graph = AppGraph(this)
         // Decrypted attachments only live in the cache for a day.
@@ -55,6 +52,8 @@ class ChatCtrlApp : Application(), SingletonImageLoader.Factory {
         graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { graph.drafts.warm() } }
         // The list of custom servers signed in to before: encrypt one an older version left in plain text.
         graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { graph.prefs.encryptRecentServers() } }
+        // The connection log was removed: delete the file an older version kept.
+        graph.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { java.io.File(filesDir, "connection.log").delete() } }
         Notifier.createChannels(this)
         com.vknxworks.chatctrl.call.CallNotifications.createChannels(this)
         // Live location sharing was removed in 2.3.1: drop its notification channel from Android's settings.

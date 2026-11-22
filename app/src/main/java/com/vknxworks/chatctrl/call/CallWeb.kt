@@ -15,7 +15,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.vknxworks.chatctrl.BuildConfig
 import com.vknxworks.chatctrl.R
 import org.json.JSONArray
 import org.json.JSONObject
@@ -234,12 +233,9 @@ internal class CallAudio(
             // Android's list of communication devices can lag behind this callback: add the new ones ourselves,
             // so earphones connected during the call are offered (and picked) straight away.
             val added = addedDevices.orEmpty().filter { it.type in types && it.isSink }
-            if (added.isNotEmpty()) log("added: ${added.joinToString { describe(it) }}")
             publish(extra = added)
         }
         override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
-            val removed = removedDevices.orEmpty().filter { it.type in types && it.isSink }
-            if (removed.isNotEmpty()) log("removed: ${removed.joinToString { describe(it) }}")
             publish()
         }
     }
@@ -248,25 +244,9 @@ internal class CallAudio(
     private val listenerExecutor = Executors.newSingleThreadExecutor()
 
     private val commsListener = AudioManager.OnCommunicationDeviceChangedListener { device ->
-        log("now playing through ${device?.let { describe(it) } ?: "nothing"}")
         // Keep the device picked in the call, even if something else switched it.
         val w = wanted
         if (w != null && device?.id?.toString() != w) main.post { if (started) select(w) }
-    }
-
-    private fun log(message: String) = com.vknxworks.chatctrl.matrix.ConnectionLog.log("call audio: $message")
-
-    private fun describe(d: AudioDeviceInfo): String = "${typeName(d.type)}#${d.id}"
-
-    private fun typeName(type: Int): String = when (type) {
-        AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "bluetooth-call"
-        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "bluetooth-media"
-        AudioDeviceInfo.TYPE_BLE_HEADSET -> "bluetooth-le"
-        AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_DEVICE -> "usb"
-        AudioDeviceInfo.TYPE_WIRED_HEADSET, AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "wired"
-        AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "speaker"
-        AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "earpiece"
-        else -> "type$type"
     }
 
     private fun isBluetooth(d: AudioDeviceInfo) = d.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || d.type == AudioDeviceInfo.TYPE_BLE_HEADSET
@@ -279,7 +259,6 @@ internal class CallAudio(
     fun setAudioDevice(id: String?) {
         if (id != null) main.post {
             if (!started) return@post
-            log("Element Call picked #$id")
             wanted = id
             select(id)
         }
@@ -313,7 +292,6 @@ internal class CallAudio(
 
     /** Picked in the app's picker: switch now, and tell Element Call so its own menu agrees. */
     fun choose(id: String) {
-        log("picked #$id in the app's picker")
         wanted = id
         select(id)
         val safe = JSONObject.quote(id)
@@ -339,7 +317,6 @@ internal class CallAudio(
         if (started || ended) return
         started = true
         audio.mode = AudioManager.MODE_IN_COMMUNICATION
-        log("call started, mode ${audio.mode}, devices: ${devices().joinToString { describe(it) }}")
         webView.evaluateJavascript(
             "if (window.controls) { controls.onAudioPlaybackStarted = () => { chatCtrlAudio.onTrackReady(); };" +
                 " controls.onAudioDeviceSelect = (id) => { chatCtrlAudio.setAudioDevice(id); };" +
@@ -425,13 +402,9 @@ internal class CallAudio(
         // If the picked device isn't there any more (Bluetooth earphones re-announce themselves with a new ID when
         // they switch between music and call mode), use the best one there is.
         var device: AudioDeviceInfo = available.firstOrNull { it.id.toString() == id }
-            ?: run {
-                log("picked #$id is gone; available: ${available.joinToString { describe(it) }}")
-                devices().firstOrNull()
-            }
+            ?: devices().firstOrNull()
             ?: return
         val ok = runCatching { audio.setCommunicationDevice(device) }.getOrDefault(false)
-        log("switch to ${describe(device)}: ${if (ok) "accepted" else "REFUSED"}")
         if (!ok && isBluetooth(device)) {
             // Android refused this Bluetooth route: try the earphones' other Bluetooth mode, then give up on Bluetooth
             // rather than leave the call silent.
@@ -439,7 +412,6 @@ internal class CallAudio(
             val fallback = other ?: devices().firstOrNull { !isBluetooth(it) }
             if (fallback != null) {
                 val ok2 = runCatching { audio.setCommunicationDevice(fallback) }.getOrDefault(false)
-                log("fallback to ${describe(fallback)}: ${if (ok2) "accepted" else "REFUSED"}")
                 if (ok2) { wanted = fallback.id.toString(); device = fallback }
             }
         }
@@ -449,11 +421,7 @@ internal class CallAudio(
             main.postDelayed({
                 if (!started) return@postDelayed
                 val now = audio.communicationDevice
-                if (now?.id != target.id) {
-                    log("after 2 s still on ${now?.let { describe(it) } ?: "nothing"}, asking again for ${describe(target)}")
-                    val again = runCatching { audio.setCommunicationDevice(target) }.getOrDefault(false)
-                    log("second try: ${if (again) "accepted" else "REFUSED"}")
-                }
+                if (now?.id != target.id) runCatching { audio.setCommunicationDevice(target) }
             }, 2_000)
         }
         runCatching {
@@ -523,5 +491,4 @@ internal fun WebView.setUpForCall() {
         setSupportMultipleWindows(false)
         javaScriptCanOpenWindowsAutomatically = false
     }
-    WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
 }

@@ -173,9 +173,6 @@
     <string name="group_ignored">Genegeerde personen</string>
     <string name="ignored_unignore">Tik om niet meer te negeren</string>
     <string name="group_troubleshooting">Probleemoplossing</string>
-    <string name="connection_log">Verbindingslogboek</string>
-    <string name="connection_log_subtitle">Wat de verbinding onlangs deed, om onderbrekingen te verklaren. Geen berichten, namen of servers.</string>
-    <string name="connection_log_empty">Nog niets gelogd.</string>
     <string name="chats_search">Zoeken</string>
     <string name="chats_search_hint">Chats zoeken</string>
     <string name="chats_close_search">Zoeken sluiten</string>
@@ -382,7 +379,6 @@
     <string name="the_server_s_tls_certificate_isn_t">Het TLS-certificaat van de server wordt niet vertrouwd. Gebruikt de server je eigen CA, installeer dat certificaat dan op de telefoon.</string>
     <string name="something_went_wrong">Er ging iets mis</string>
     <string name="the_server_s_response_was_too_large">Het antwoord van de server was te groot</string>
-    <string name="network">netwerk %1$s</string>
     <string name="no_media_source">Geen mediabron</string>
     <string name="bad_file_name">Ongeldige bestandsnaam</string>
     <string name="couldn_t_store_the_file">Het bestand kon niet worden opgeslagen</string>

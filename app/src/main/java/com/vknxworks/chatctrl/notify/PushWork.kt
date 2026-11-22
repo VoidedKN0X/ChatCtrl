@@ -1,7 +1,6 @@
 package com.vknxworks.chatctrl.notify
 
 import android.content.Context
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -127,7 +126,6 @@ class FetchPushWorker(context: Context, params: WorkerParameters) : CoroutineWor
                             PushQueue.remove(context, p.eventId)
                         }
                         .onFailure {
-                            Log.w(TAG, "fetch failed: ${it.javaClass.simpleName}")
                             if (PushQueue.failed(context, p.eventId) >= MAX_TRIES) {
                                 PushNotifications.postFallback(context, p.roomId)
                                 PushQueue.remove(context, p.eventId)
@@ -176,13 +174,11 @@ class FetchPushWorker(context: Context, params: WorkerParameters) : CoroutineWor
                         .getOrNull() == PushNotifications.Outcome.ENCRYPTED
                 }
             }
-            if (waiting.isNotEmpty()) Log.w(TAG, "${waiting.size} notification(s) still encrypted after catching up")
         }
         return waiting
     }
 
     companion object {
-        private const val TAG = "FetchPush"
         private const val WORK = "push-fetch"
         private const val RETRY = "push-fetch-retry"
         private const val KEY_ATTEMPT = "attempt"
@@ -246,7 +242,6 @@ class PusherCheckWorker(context: Context, params: WorkerParameters) : CoroutineW
                 p?.optString("pushkey") == endpoint && p.optString("app_id") == Push.APP_ID
             }
             if (!present) {
-                Log.w(TAG, "pusher missing on the homeserver, adding it again")
                 Push.onNewEndpoint(context, endpoint)
             }
             Result.success()
@@ -254,7 +249,6 @@ class PusherCheckWorker(context: Context, params: WorkerParameters) : CoroutineW
     }
 
     companion object {
-        private const val TAG = "PusherCheck"
         private const val PERIODIC = "pusher-check"
         private const val ONCE = "pusher-check-now"
 

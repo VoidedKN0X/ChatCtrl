@@ -27,7 +27,7 @@ class VoiceRecorder(private val context: Context) {
     private var file: File? = null
     private var startedAt = 0L
     private var sampler: Job? = null
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.LogAndContinue)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.IgnoreAndContinue)
     private val samples = ArrayList<Float>()
 
     private val _levels = MutableStateFlow<List<Float>>(emptyList())
@@ -112,7 +112,7 @@ data class PlayerState(val key: String? = null, val playing: Boolean = false, va
 /** Plays one voice message or audio clip at a time, inline in the chat. */
 object AudioPlayer {
     private var player: MediaPlayer? = null
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.LogAndContinue)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.IgnoreAndContinue)
     private var ticker: Job? = null
     private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()

@@ -171,9 +171,6 @@
     <string name="group_ignored">Ignorierte Personen</string>
     <string name="ignored_unignore">Tippen, um nicht mehr zu ignorieren</string>
     <string name="group_troubleshooting">Fehlerbehebung</string>
-    <string name="connection_log">Verbindungsprotokoll</string>
-    <string name="connection_log_subtitle">Was die Verbindung zuletzt getan hat, um Verbindungsabbrüche zu erklären. Keine Nachrichten, Namen oder Server.</string>
-    <string name="connection_log_empty">Noch nichts protokolliert.</string>
     <string name="chats_search">Suchen</string>
     <string name="chats_search_hint">Chats durchsuchen</string>
     <string name="chats_close_search">Suche schließen</string>
@@ -380,7 +377,6 @@
     <string name="the_server_s_tls_certificate_isn_t">Dem TLS-Zertifikat des Servers wird nicht vertraut. Wenn er deine eigene CA nutzt, installiere dieses Zertifikat auf dem Telefon.</string>
     <string name="something_went_wrong">Etwas ist schiefgelaufen</string>
     <string name="the_server_s_response_was_too_large">Die Antwort des Servers war zu groß</string>
-    <string name="network">Netzwerk %1$s</string>
     <string name="no_media_source">Keine Medienquelle</string>
     <string name="bad_file_name">Ungültiger Dateiname</string>
     <string name="couldn_t_store_the_file">Datei konnte nicht gespeichert werden</string>

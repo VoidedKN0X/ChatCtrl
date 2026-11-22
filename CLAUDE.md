@@ -20,7 +20,7 @@ What ChatCtrl stores itself (outside the Matrix SDK) and how:
 
 - Encrypted with the Keystore key `chatctrl_sessions` (`data/SecureBox`): the saved sign-in (`session` prefs, also sealed by the app lock vault when that applies), the drafts index (`drafts` prefs) and the recent custom servers (`settings` prefs, `recent_servers_enc`; `Prefs.encryptRecentServers` moves an old plain `recent_servers` over at start, off the main thread). Read and write these off the main thread where you can.
 - The SDK's stores under `files/sessions` and `cache/sessions` (and the search index) are encrypted by the SDK with the session's database key. Never touch them.
-- Plain on purpose: `cache/media`, `cache/upload`, `cache/shared` (opened by viewers, players and other apps by path or FileProvider; purged after a day / an hour and on lock), `cache/osmdroid` (read by the map library), `notified`, `push_queue`, `push`, `unifiedpush` and `notify_links` prefs (read and written on the push and launch paths, which must not wait for or depend on a key), `connection.log` (appended to from everywhere; no names, servers or content) and plain settings.
+- Plain on purpose: `cache/media`, `cache/upload`, `cache/shared` (opened by viewers, players and other apps by path or FileProvider; purged after a day / an hour and on lock), `cache/osmdroid` (read by the map library), `notified`, `push_queue`, `push`, `unifiedpush` and `notify_links` prefs (read and written on the push and launch paths, which must not wait for or depend on a key) and plain settings.
 - There is no separate data key or sealed-file format in ChatCtrl (unlike RideCtrl): nothing it stores as its own plain files needed one.
 
 ## Releasing

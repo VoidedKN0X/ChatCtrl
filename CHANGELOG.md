@@ -2,6 +2,16 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+### Removed
+
+- **Connection log.** Settings › Troubleshooting › Connection log is gone, with its window and Copy button. ChatCtrl no longer writes that log at all (sync states, the app coming and going, network changes, restarts, failed sends, call audio device switches, the Reconnect button and the "verified devices only" switch were noted in it), and the file an older version kept on the phone is deleted the first time the new version starts.
+- **Debug logging.** Test builds no longer send the Matrix SDK's logs (at debug level) to Android's system log: every build now uses the quiet setting release builds always had (errors only, written nowhere). The few remaining log lines in the app (push, pusher checks, timeline and sync errors) are gone too.
+- **Call page debugging.** Test builds no longer let a computer inspect the call page over USB. Release builds never allowed it.
+
+Kept as they were: the reason shown under a message that failed to send, with **Copy reason** and **Retry all**. Reconnecting, automatic reloads when the connection is stuck, push, calls and audio device switching work exactly as before. Nothing else changes.
+
 ## v2.4.0 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

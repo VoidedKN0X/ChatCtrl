@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import android.webkit.MimeTypeMap
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
@@ -63,8 +62,6 @@ import uniffi.matrix_sdk_ui.TimelineReadReceiptTracking
 import com.vknxworks.chatctrl.Strings
 import com.vknxworks.chatctrl.R
 
-private const val TAG = "Timeline"
-
 /** The receipt sent when you read a chat: public, or private (only your own devices see it) when that is switched on. */
 fun readReceiptType(): ReceiptType =
     if (com.vknxworks.chatctrl.ChatCtrlApp.graph.prefs.privateReadReceipts.value) ReceiptType.READ_PRIVATE else ReceiptType.READ
@@ -79,13 +76,12 @@ class TimelineController(
     /** Only photos, videos, files and audio, newest first in pages: for the media and files gallery. */
     val mediaOnly: Boolean = false,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.vknxworks.chatctrl.matrix.LogAndContinue)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.vknxworks.chatctrl.matrix.IgnoreAndContinue)
     private var timeline: Timeline? = null
     private val handles = mutableListOf<TaskHandle>()
     private val diffs = Channel<List<TimelineDiff>>(Channel.UNLIMITED)
     private val items = ArrayList<TimelineEntry>()
     private val failedHandles = HashMap<String, SendHandle>()
-    private val loggedFailures = HashSet<String>()
     private val requestedReplies = HashSet<String>()
 
     private val _entries = MutableStateFlow<List<TimelineEntry>>(emptyList())
@@ -157,7 +153,6 @@ class TimelineController(
                 scope.launch { runCatching { t.fetchMembers() } }
                 if (_entries.value.size < 20) paginateBack()
             }.onFailure {
-                Log.e(TAG, "timeline failed", it)
                 _error.value = it.userMessage()
             }
         }
@@ -310,10 +305,6 @@ class TimelineController(
                 e.lazyProvider.getSendHandle()?.let { failedHandles[key] = it }
                 // The reason the SDK gives, shown under the message so a failed send can be explained.
                 sendError = (s.error.toString() + if (s.isRecoverable) " " + Strings.str(R.string.send_error_will_retry) else "").take(400)
-                // The connection log gets only the kind of error: no names, rooms or servers.
-                if (loggedFailures.add(key)) {
-                    ConnectionLog.log("send failed: ${s.error::class.simpleName}, ${if (s.isRecoverable) "recoverable" else "not recoverable"}")
-                }
                 SendStatus.FAILED
             }
         }
@@ -512,7 +503,6 @@ class TimelineController(
     fun retry(item: TimelineEntry.Message) = launchAction {
         // After a failed send the SDK pauses this chat's send queue; switch it back on, or a retry does nothing.
         runCatching { room.enableSendQueue(true) }
-        loggedFailures.remove(item.key)
         failedHandles.remove(item.key)?.tryResend()
     }
 
@@ -521,7 +511,6 @@ class TimelineController(
         runCatching { room.enableSendQueue(true) }
         val failed = _entries.value.filterIsInstance<TimelineEntry.Message>().filter { it.status == SendStatus.FAILED }
         for (item in failed) {
-            loggedFailures.remove(item.key)
             val handle = failedHandles.remove(item.key) ?: continue
             runCatching { handle.tryResend() }
         }

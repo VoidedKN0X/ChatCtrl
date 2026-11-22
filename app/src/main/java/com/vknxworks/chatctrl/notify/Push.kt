@@ -1,7 +1,6 @@
 package com.vknxworks.chatctrl.notify
 
 import android.content.Context
-import android.util.Log
 import com.vknxworks.chatctrl.ChatCtrlApp
 import com.vknxworks.chatctrl.matrix.MatrixSession
 import com.vknxworks.chatctrl.matrix.userMessage
@@ -41,7 +40,6 @@ sealed interface PushStatus {
  * other server. The 15-minute background check keeps running alongside, as a safety net.
  */
 object Push {
-    private const val TAG = "Push"
     const val APP_ID = "com.vknxworks.chatctrl"
     private const val DESCRIPTION = "ChatCtrl"
     private const val GATEWAY_PATH = "/_matrix/push/v1/notify"
@@ -106,7 +104,6 @@ object Push {
         if (!isEnabled(context)) return
         if (previous != null && previous != UnifiedPush.NTFY) {
             // Earlier versions let you pick another push app. Only ntfy is used now.
-            Log.w(TAG, "moving push from another push app to ntfy")
             if (!UnifiedPush.isPushAppInstalled(context)) {
                 ChatCtrlApp.graph.scope.launch { disable(context, waitForSession()) }
                 return
@@ -170,7 +167,6 @@ object Push {
             is Gateway.Problem -> {
                 if (old == endpoint && oldGateway != null && oldGateway != OLD_PUBLIC_GATEWAY) {
                     // Couldn't check right now (no network?), but this endpoint already works through its gateway.
-                    Log.w(TAG, "gateway check failed, keeping the working pusher")
                     _status.value = PushStatus.Active(oldGateway)
                     return
                 }
@@ -199,7 +195,6 @@ object Push {
             _status.value = PushStatus.Active(gateway)
             PusherCheckWorker.schedule(context)
         }.onFailure {
-            Log.w(TAG, "setPusher failed: ${it.javaClass.simpleName}")
             _status.value = PushStatus.Failed(it.userMessage().ifBlank { Strings.str(R.string.the_homeserver_refused_the_pusher) })
         }
     }

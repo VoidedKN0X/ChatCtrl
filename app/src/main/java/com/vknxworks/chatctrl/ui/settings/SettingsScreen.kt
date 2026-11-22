@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -33,7 +32,6 @@ import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.PhoneAndroid
-import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Fingerprint
@@ -75,7 +73,6 @@ import com.vknxworks.chatctrl.ui.GroupChoice
 import com.vknxworks.chatctrl.ui.GroupRow
 import com.vknxworks.chatctrl.ui.GroupSwitch
 import com.vknxworks.chatctrl.ui.ScreenTopBar
-import com.vknxworks.chatctrl.ui.copyText
 import com.vknxworks.chatctrl.ui.lock.AppLock
 import com.vknxworks.chatctrl.ui.lock.PinRequest
 import com.vknxworks.chatctrl.ui.lock.findActivity
@@ -84,7 +81,6 @@ import com.vknxworks.chatctrl.ui.rememberPushHealth
 import kotlinx.coroutines.launch
 import org.matrix.rustcomponents.sdk.RoomNotificationMode
 import org.matrix.rustcomponents.sdk.sdkGitSha
-import com.vknxworks.chatctrl.Strings
 
 /**
  * App settings in the Ctrl series order: Appearance, Notifications, Privacy and security, then ChatCtrl's own
@@ -125,7 +121,6 @@ fun SettingsScreen(
     var mentions by remember { mutableStateOf(true) }
     var invites by remember { mutableStateOf(true) }
     var ignored by remember { mutableStateOf<List<String>>(emptyList()) }
-    var connectionLog by remember { mutableStateOf<String?>(null) }
     val bioAvailable = remember { AppLock.biometricAvailable(context) }
 
     LaunchedEffect(Unit) {
@@ -454,13 +449,6 @@ fun SettingsScreen(
 
             Group(stringResource(R.string.group_troubleshooting)) {
                 GroupRow(
-                    stringResource(R.string.connection_log),
-                    stringResource(R.string.connection_log_subtitle),
-                    icon = Icons.Outlined.Sync,
-                    showChevron = true,
-                    onClick = { connectionLog = com.vknxworks.chatctrl.matrix.ConnectionLog.read().lines().takeLast(400).joinToString("\n") },
-                )
-                GroupRow(
                     stringResource(R.string.sdk_version),
                     runCatching { sdkGitSha().take(8) }.getOrDefault(""),
                     icon = Icons.Outlined.Info,
@@ -476,25 +464,6 @@ fun SettingsScreen(
         }
     }
 
-    connectionLog?.let { text ->
-        com.vknxworks.chatctrl.ui.components.CtrlDialog(
-            onDismissRequest = { connectionLog = null },
-            title = { Text(stringResource(R.string.connection_log)) },
-            text = {
-                androidx.compose.foundation.text.selection.SelectionContainer {
-                    Text(
-                        text.ifBlank { stringResource(R.string.connection_log_empty) },
-                        fontFamily = com.vknxworks.chatctrl.ui.JetBrainsMono,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState(Int.MAX_VALUE)),
-                    )
-                }
-            },
-            confirmButton = { TextButton(onClick = { copyText(context, Strings.str(R.string.connection_log), text); connectionLog = null }) { Text(stringResource(R.string.copy)) } },
-            dismissButton = { TextButton(onClick = { connectionLog = null }) { Text(stringResource(R.string.close)) } },
-        )
-    }
-
     strictConfirm?.let { on ->
         com.vknxworks.chatctrl.ui.ConfirmDialog(
             title = stringResource(if (on) R.string.verified_devices_only_on_title else R.string.verified_devices_only_off_title),
@@ -503,7 +472,6 @@ fun SettingsScreen(
             onDismiss = { strictConfirm = null },
             onConfirm = {
                 prefs.setVerifiedDevicesOnly(on)
-                com.vknxworks.chatctrl.matrix.ConnectionLog.log("verified devices only: ${if (on) "on" else "off"}, restarting")
                 com.vknxworks.chatctrl.AppRestart.restart(context)
             },
         )

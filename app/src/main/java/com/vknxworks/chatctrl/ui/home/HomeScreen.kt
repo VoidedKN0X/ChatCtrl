@@ -251,7 +251,6 @@ fun HomeScreen(
                     )
                     // Reloads the app's connection, the same as force-stopping and reopening it.
                     androidx.compose.material3.TextButton(onClick = {
-                        com.vknxworks.chatctrl.matrix.ConnectionLog.log("Reconnect tapped (sync $sync)")
                         com.vknxworks.chatctrl.AppRestart.restart(ctx)
                     }) { Text(stringResource(R.string.chats_reconnect), color = MaterialTheme.colorScheme.onErrorContainer) }
                 }

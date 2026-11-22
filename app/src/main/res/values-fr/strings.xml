@@ -171,9 +171,6 @@
     <string name="group_ignored">Personnes ignorées</string>
     <string name="ignored_unignore">Appuyez pour ne plus ignorer</string>
     <string name="group_troubleshooting">Dépannage</string>
-    <string name="connection_log">Journal de connexion</string>
-    <string name="connection_log_subtitle">Ce que la connexion a fait récemment, pour expliquer les déconnexions. Aucun message, nom ni serveur.</string>
-    <string name="connection_log_empty">Rien de journalisé pour l\'instant.</string>
     <string name="chats_search">Rechercher</string>
     <string name="chats_search_hint">Rechercher des discussions</string>
     <string name="chats_close_search">Fermer la recherche</string>
@@ -380,7 +377,6 @@
     <string name="the_server_s_tls_certificate_isn_t">Le certificat TLS du serveur n\'est pas approuvé. S\'il utilise votre propre autorité de certification, installez ce certificat sur le téléphone.</string>
     <string name="something_went_wrong">Un problème est survenu</string>
     <string name="the_server_s_response_was_too_large">La réponse du serveur était trop volumineuse</string>
-    <string name="network">réseau %1$s</string>
     <string name="no_media_source">Aucune source de média</string>
     <string name="bad_file_name">Nom de fichier incorrect</string>
     <string name="couldn_t_store_the_file">Impossible d\'enregistrer le fichier</string>

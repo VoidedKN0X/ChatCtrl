@@ -188,9 +188,6 @@
     <string name="ignored_unignore">Tap to unignore</string>
 
     <string name="group_troubleshooting">Troubleshooting</string>
-    <string name="connection_log">Connection log</string>
-    <string name="connection_log_subtitle">What the connection did recently, to explain disconnects. No messages, names or servers.</string>
-    <string name="connection_log_empty">Nothing logged yet.</string>
     <string name="sdk_version" translatable="false">Matrix Rust SDK</string>
 
     <!-- Chats tab -->
@@ -410,7 +407,6 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="the_server_s_response_was_too_large">The server\'s response was too large</string>
     <string name="http" translatable="false">HTTP %1$s</string>
-    <string name="network">network %1$s</string>
     <string name="no_media_source">No media source</string>
     <string name="bad_file_name">Bad file name</string>
     <string name="couldn_t_store_the_file">Couldn\'t store the file</string>

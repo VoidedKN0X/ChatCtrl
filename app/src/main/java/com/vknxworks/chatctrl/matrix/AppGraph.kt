@@ -1,7 +1,6 @@
 package com.vknxworks.chatctrl.matrix
 
 import android.content.Context
-import android.util.Log
 import com.vknxworks.chatctrl.R
 import com.vknxworks.chatctrl.data.Prefs
 import com.vknxworks.chatctrl.data.SessionStore
@@ -50,7 +49,7 @@ class AppGraph(val context: Context) {
     val factory = ClientFactory(context, store) { prefs.verifiedDevicesOnly.value }
     val auth = AuthService(this)
     val redirectScheme: String = context.getString(R.string.login_redirect_scheme)
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.LogAndContinue)
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.IgnoreAndContinue)
 
     private val _state = MutableStateFlow<AppState>(AppState.Loading)
     val state: StateFlow<AppState> = _state.asStateFlow()
@@ -197,9 +196,9 @@ class AppGraph(val context: Context) {
                 client.restoreSession(factory.toSession(stored))
                 val sync = client.syncService().withOfflineMode().withSharePos(true).finish()
                 MatrixSession(client, sync, paths).also { it.start() }
-            }.onFailure { Log.e("AppGraph", "restore failed", it) }.getOrNull()
+            }.getOrNull()
         }?.also { s ->
-            s.onStuck = { reason -> scope.launch { onSessionStuck(s, reason) } }
+            s.onStuck = { scope.launch { onSessionStuck(s) } }
             _state.value = AppState.SignedIn(s)
             com.vknxworks.chatctrl.notify.Push.refresh(context)
             scope.launch {
@@ -221,19 +220,14 @@ class AppGraph(val context: Context) {
      * reload the app (what a force stop does), at most once every 10 minutes so a server problem can't cause a loop.
      * Otherwise the chat list's banner offers a manual Reconnect.
      */
-    private suspend fun onSessionStuck(s: MatrixSession, reason: String) {
+    private suspend fun onSessionStuck(s: MatrixSession) {
         if (!s.inForeground) return
         val reachable = withContext(Dispatchers.IO) { serverAnswers(s.homeserver) }
-        ConnectionLog.log("homeserver ${if (reachable) "answers" else "doesn't answer"}")
         if (!reachable) return
         val p = context.getSharedPreferences("connection", Context.MODE_PRIVATE)
         val last = p.getLong("auto_reload_at", 0)
-        if (System.currentTimeMillis() - last < 10 * 60_000) {
-            ConnectionLog.log("not reloading automatically: already did in the last 10 minutes")
-            return
-        }
+        if (System.currentTimeMillis() - last < 10 * 60_000) return
         p.edit().putLong("auto_reload_at", System.currentTimeMillis()).commit()
-        ConnectionLog.log("reloading the app to reconnect ($reason)")
         com.vknxworks.chatctrl.AppRestart.restart(context, com.vknxworks.chatctrl.notify.OpenRoom.id)
     }
 
@@ -297,7 +291,6 @@ class AppGraph(val context: Context) {
         runCatching { com.vknxworks.chatctrl.notify.Notifier.forgetAll(context) }
         runCatching { com.vknxworks.chatctrl.notify.PushNotifications.clearAll(context) }
         runCatching { com.vknxworks.chatctrl.notify.PushQueue.clear(context) }
-        runCatching { ConnectionLog.clear() }
         // Cached map tiles show which places were looked at on a location map.
         runCatching { java.io.File(context.cacheDir, "osmdroid").deleteRecursively() }
     }

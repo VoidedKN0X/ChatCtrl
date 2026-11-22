@@ -150,7 +150,7 @@ class CallActivity : ComponentActivity() {
     private var loaded = false
     private var ending = false
     private var portraitPip = true
-    private val callScope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.LogAndContinue)
+    private val callScope = CoroutineScope(SupervisorJob() + Dispatchers.Main + com.vknxworks.chatctrl.matrix.IgnoreAndContinue)
     private var timeoutJob: Job? = null
 
     private var permissionRequest: PermissionRequest? = null
@@ -179,7 +179,6 @@ class CallActivity : ComponentActivity() {
      */
     private var afterBluetoothAnswer: (() -> Unit)? = null
     private val askBluetooth = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        com.vknxworks.chatctrl.matrix.ConnectionLog.log("call audio: nearby devices permission ${if (granted) "granted" else "not granted"}")
         afterBluetoothAnswer?.invoke()
         afterBluetoothAnswer = null
     }
