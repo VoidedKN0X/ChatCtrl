@@ -56,9 +56,9 @@ object ExifStrip {
         ExifInterface.TAG_GPS_TRACK_REF,
         ExifInterface.TAG_GPS_VERSION_ID,
         ExifInterface.TAG_DATETIME_ORIGINAL,
-        ExifInterface.TAG_BODY_SERIAL_NUMBER,
-        ExifInterface.TAG_LENS_SERIAL_NUMBER,
-        ExifInterface.TAG_CAMERA_OWNER_NAME,
+        "BodySerialNumber", // not public as a constant in the platform class, but it knows the tag
+        "LensSerialNumber",
+        "CameraOwnerName",
     )
 
     /**
