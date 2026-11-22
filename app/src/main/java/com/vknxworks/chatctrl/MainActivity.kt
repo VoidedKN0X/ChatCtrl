@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.content.IntentCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vknxworks.chatctrl.matrix.AppState
 import com.vknxworks.chatctrl.notify.Notifier
@@ -122,23 +121,13 @@ class MainActivity : ComponentActivity() {
         }
         when (intent.action) {
             Intent.ACTION_VIEW -> intent.data?.let(::handleUri)
-            Intent.ACTION_SEND -> {
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
                 val text = intent.getStringExtra(Intent.EXTRA_TEXT)
-                // Only files from other apps; never file: URIs or our own providers (private-file theft).
-                val stream = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-                    ?.takeIf { isForeignContentUri(this, it) }
-                if (text != null || stream != null) DeepLinks.share.value = SharedContent(text, stream)
-            }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                val text = intent.getStringExtra(Intent.EXTRA_TEXT)
-                // The same rule for every file in the list: only content from other apps.
-                val streams = IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-                    .orEmpty()
-                    .filter { isForeignContentUri(this, it) }
-                    .distinct()
-                    .take(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)
+                // One file or several, pictures, videos and other files mixed. Only content from other apps:
+                // never file: URIs or our own providers (private-file theft).
+                val (streams, leftOut) = com.vknxworks.chatctrl.ui.sharedStreams(this, intent)
                 if (text != null || streams.isNotEmpty()) {
-                    DeepLinks.share.value = SharedContent(text, streams.firstOrNull(), streams.drop(1))
+                    DeepLinks.share.value = SharedContent(text, streams.firstOrNull(), streams.drop(1), leftOut)
                 }
             }
         }

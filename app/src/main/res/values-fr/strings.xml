@@ -905,6 +905,29 @@
         <item quantity="other">Envoyer %1$d fichiers ?</item>
     </plurals>
     <string name="send_files_body">Chacun est envoyé dans son propre message, dans cet ordre. Restez dans cette discussion jusqu\'à ce qu\'ils soient tous envoyés.</string>
+    <string name="send_files_failed_item">%1$s : %2$s</string>
+    <plurals name="send_files_some_failed">
+        <item quantity="one">%1$d fichier sur %2$d n\'a pas été envoyé :</item>
+        <item quantity="other">%1$d fichiers sur %2$d n\'ont pas été envoyés :</item>
+    </plurals>
+    <string name="file_too_big_for_server">Ce fichier dépasse la taille autorisée par votre serveur (%1$s)</string>
+    <string name="uploading_percent">Envoi en cours, %1$d %%</string>
+    <string name="staging_remove">Retirer %1$s</string>
+    <string name="staging_too_big">Trop volumineux</string>
+    <plurals name="staging_too_big_note">
+        <item quantity="one">%1$d fichier dépasse la taille autorisée par votre serveur (%2$s). Retirez-le pour envoyer les autres.</item>
+        <item quantity="other">%1$d fichiers dépassent la taille autorisée par votre serveur (%2$s). Retirez-les pour envoyer les autres.</item>
+    </plurals>
+    <string name="staging_first_gets_caption">La légende accompagne le premier fichier.</string>
+    <string name="staging_first_gets_caption_and_reply">La légende et la réponse accompagnent le premier fichier ; les autres suivent.</string>
+    <plurals name="staging_send_n">
+        <item quantity="one">Envoyer %1$d</item>
+        <item quantity="other">Envoyer %1$d</item>
+    </plurals>
+    <plurals name="staging_left_out">
+        <item quantity="one">%1$d fichier a été laissé de côté : %2$d au maximum à la fois.</item>
+        <item quantity="other">%1$d fichiers ont été laissés de côté : %2$d au maximum à la fois.</item>
+    </plurals>
     <string name="verified_devices_only">Appareils vérifiés uniquement</string>
     <string name="verified_devices_only_subtitle">Strict : vos messages chiffrés ne vont qu\'aux appareils vérifiés par leur propriétaire, et les messages d\'appareils non vérifiés ne sont pas affichés.</string>
     <string name="verified_devices_only_on_title">Activer Appareils vérifiés uniquement ?</string>

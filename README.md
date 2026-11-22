@@ -17,6 +17,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Link new device**: sign a new phone or computer in with a QR code, already verified (servers with Matrix Authentication Service and QR sign-in)
 - **End-to-end encryption** by default, with device verification and key backup
 - **Messages**: replies, threads, reactions, edits, polls, voice messages, images, videos, files and locations
+- **Send several at once**: pick up to 20 photos, videos or files in one go (from the photo picker, **File**, or shared from another app, mixed types too), check them in a strip with thumbnails, names and sizes, take out the ones you don't want, add a caption and send; each goes as its own message in the order shown, with its own upload progress and Retry, and files bigger than your server allows are flagged before sending
 - **Stickers and GIFs**: send stickers from your own pack and from room packs (the same Matrix image packs FluffyChat, Cinny and Nheko use), add pictures or received stickers to your pack, and send GIFs from your phone; no GIF search service
 - **Quick gestures**: swipe a message to reply, double-tap to react, and see who has read up to where
 - **Failed messages explained**: the reason shows under a message that wasn't sent; copy it, retry one or retry all
@@ -30,7 +31,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Locations** on an **OpenStreetMap** map: see locations other people send, and follow their live locations while they share them (Matrix live location, MSC3489, as in Element X). You can send a spot you pick on the map (a dropped pin); ChatCtrl never reads where your phone is and has no location permission
 - **Create rooms**, start direct chats, explore public rooms, and manage members and moderation
 - **Spaces**: show only one space's chats in the chat list, see what's in a space and join its rooms
-- **Share to ChatCtrl** from other apps, several pictures or files at once too, and **forward** a message to another chat
+- **Share to ChatCtrl** from other apps, up to 20 pictures, videos or files at once, and **forward** a message to another chat
 - **Verified devices only**: an optional strict mode that only shares message keys with devices their owner has verified
 - **Device list**: rename your signed-in sessions, sign them out, or sign out every session you haven't used for a while in one go
 - **Back up and restore settings** to a file: the app's own settings only, never your sign-in, keys or PIN

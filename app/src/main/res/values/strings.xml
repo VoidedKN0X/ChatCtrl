@@ -962,6 +962,29 @@
         <item quantity="other">Send %1$d files?</item>
     </plurals>
     <string name="send_files_body">Each one is sent as its own message, in this order. Stay in this chat until they have all been sent.</string>
+    <string name="send_files_failed_item">%1$s: %2$s</string>
+    <plurals name="send_files_some_failed">
+        <item quantity="one">%1$d of %2$d files wasn\'t sent:</item>
+        <item quantity="other">%1$d of %2$d files weren\'t sent:</item>
+    </plurals>
+    <string name="file_too_big_for_server">This file is bigger than your server allows (%1$s)</string>
+    <string name="uploading_percent">Uploading, %1$d%%</string>
+    <string name="staging_remove">Remove %1$s</string>
+    <string name="staging_too_big">Too big</string>
+    <plurals name="staging_too_big_note">
+        <item quantity="one">%1$d file is bigger than your server allows (%2$s). Remove it to send the rest.</item>
+        <item quantity="other">%1$d files are bigger than your server allows (%2$s). Remove them to send the rest.</item>
+    </plurals>
+    <string name="staging_first_gets_caption">The caption goes with the first one.</string>
+    <string name="staging_first_gets_caption_and_reply">The caption and the reply go with the first one; the others follow it.</string>
+    <plurals name="staging_send_n">
+        <item quantity="one">Send %1$d</item>
+        <item quantity="other">Send %1$d</item>
+    </plurals>
+    <plurals name="staging_left_out">
+        <item quantity="one">%1$d file was left out: at most %2$d at once.</item>
+        <item quantity="other">%1$d files were left out: at most %2$d at once.</item>
+    </plurals>
 
     <!-- Strict mode -->
     <string name="verified_devices_only">Verified devices only</string>

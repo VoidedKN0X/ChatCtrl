@@ -252,8 +252,8 @@ fun RoomScreen(
     var viewingLocation by remember { mutableStateOf<UiContent.Location?>(null) }
     /** The timeline row of the location on the map, so a live location's map follows its new positions. */
     var viewingLocationKey by remember { mutableStateOf<String?>(null) }
-    var pendingAttachment by remember { mutableStateOf<Uri?>(null) }
-    var pendingAttachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    /** Files picked or shared in one go, waiting in the staging dialog to be checked and sent (in this order). */
+    var staged by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var pickingSticker by remember { mutableStateOf(false) }
     val stickers = remember { com.vknxworks.chatctrl.matrix.StickerService(session) }
     var suspiciousLink by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -327,7 +327,10 @@ fun RoomScreen(
             DeepLinks.share.value = null
             shared.text?.let { composer = TextFieldValue(it, TextRange(it.length)) }
             val files = shared.uris.filter { com.vknxworks.chatctrl.ui.isForeignContentUri(context, it) }
-            if (files.size == 1) pendingAttachment = files.first() else if (files.size > 1) pendingAttachments = files
+            if (files.isNotEmpty()) staged = files
+            if (shared.leftOut > 0) {
+                snackbar.showSnackbar(Strings.plural(R.plurals.staging_left_out, shared.leftOut, shared.leftOut, com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE))
+            }
         }
     }
 
@@ -400,11 +403,15 @@ fun RoomScreen(
         }
     }
 
-    // One file opens the dialog with a caption; several are listed and sent one after the other.
+    // Picked files (one or several) go to the staging dialog; several are sent one after the other, in this order.
     fun picked(uris: List<Uri>) {
-        val files = uris.distinct().take(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)
-        if (files.size == 1) pendingAttachment = files.first() else if (files.size > 1) pendingAttachments = files
+        val (files, leftOut) = com.vknxworks.chatctrl.matrix.AttachmentPlan.take(uris, com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)
+        if (files.isNotEmpty()) staged = files
+        if (leftOut > 0) scope.launch {
+            snackbar.showSnackbar(Strings.plural(R.plurals.staging_left_out, leftOut, leftOut, com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE))
+        }
     }
+    val maxUploadSize by androidx.compose.runtime.produceState<Long?>(null) { value = timeline.maxUploadSize() }
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(com.vknxworks.chatctrl.ui.MAX_FILES_AT_ONCE)) { uris -> picked(uris) }
     val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> picked(uris) }
     // Only GIFs from the phone's pictures; they are sent as they are, so they stay animated.
@@ -947,58 +954,23 @@ fun RoomScreen(
         )
     }
 
-    pendingAttachment?.let { uri ->
-        var caption by remember(uri) { mutableStateOf("") }
-        CtrlDialog(
-            onDismissRequest = { pendingAttachment = null },
-            title = { Text(stringResource(R.string.send_attachment)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val mime = context.contentResolver.getType(uri).orEmpty()
-                    if (mime.startsWith("image/")) {
-                        coil3.compose.AsyncImage(model = uri, contentDescription = null, modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp).clip(RoundedCornerShape(12.dp)))
-                    } else {
-                        Text(uri.lastPathSegment ?: stringResource(R.string.file_2), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
-                    CtrlTextField(caption, { caption = it }, label = { Text(stringResource(R.string.caption_optional)) }, modifier = Modifier.fillMaxWidth())
-                }
+    if (staged.isNotEmpty()) {
+        AttachmentStagingDialog(
+            uris = staged,
+            maxUploadSize = maxUploadSize,
+            replying = mode is ComposerMode.Reply,
+            onRemove = { i -> staged = com.vknxworks.chatctrl.matrix.AttachmentPlan.removeAt(staged, i) },
+            onCancel = { staged = emptyList() },
+            onSend = { caption ->
+                val files = staged
+                val replyTo = (mode as? ComposerMode.Reply)?.item?.eventId
+                // One file keeps the single-file path; several go out one per message, in the order shown.
+                if (files.size == 1) timeline.sendAttachment(context, files.first(), caption, replyTo)
+                else timeline.sendAttachments(context, files, caption, replyTo)
+                mode = ComposerMode.Normal
+                staged = emptyList()
+                followLatest = true
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    val replyTo = (mode as? ComposerMode.Reply)?.item?.eventId
-                    timeline.sendAttachment(context, uri, caption, replyTo)
-                    mode = ComposerMode.Normal
-                    pendingAttachment = null
-                }) { Text(stringResource(R.string.send)) }
-            },
-            dismissButton = { TextButton(onClick = { pendingAttachment = null }) { Text(stringResource(R.string.lock_cancel)) } },
-        )
-    }
-
-    if (pendingAttachments.isNotEmpty()) {
-        val files = pendingAttachments
-        CtrlDialog(
-            onDismissRequest = { pendingAttachments = emptyList() },
-            title = { Text(pluralStringResource(R.plurals.send_files_title, files.size, files.size)) },
-            text = {
-                Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(stringResource(R.string.send_files_body))
-                    files.forEach { uri ->
-                        val name = remember(uri) { displayNameOf(context, uri) }
-                        Text(name, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val replyTo = (mode as? ComposerMode.Reply)?.item?.eventId
-                    timeline.sendAttachments(context, files, replyTo)
-                    mode = ComposerMode.Normal
-                    pendingAttachments = emptyList()
-                    followLatest = true
-                }) { Text(stringResource(R.string.send)) }
-            },
-            dismissButton = { TextButton(onClick = { pendingAttachments = emptyList() }) { Text(stringResource(R.string.lock_cancel)) } },
         )
     }
 
@@ -1051,13 +1023,6 @@ fun RoomScreen(
 private fun plainMxcUrl(sourceJson: String): String? = runCatching {
     org.json.JSONObject(sourceJson).optString("url").takeIf { it.startsWith("mxc://") }
 }.getOrNull()
-
-/** The name another app gives a shared or picked file, for showing in a list. */
-private fun displayNameOf(context: android.content.Context, uri: Uri): String = runCatching {
-    context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
-        if (c.moveToFirst()) c.getString(0) else null
-    }
-}.getOrNull()?.takeIf { it.isNotBlank() } ?: uri.lastPathSegment ?: Strings.str(R.string.file_2)
 
 /** Messages that can be sent on to another chat as they are. Stickers, polls and room events can't. */
 private fun UiContent.canForward(): Boolean = when (this) {

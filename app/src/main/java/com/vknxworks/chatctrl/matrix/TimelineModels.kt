@@ -33,6 +33,8 @@ sealed interface TimelineEntry {
         val receipts: List<ReceiptUi> = emptyList(),
         /** Why sending failed, as the SDK reported it; only set while [status] is FAILED. */
         val sendError: String? = null,
+        /** How much of an attachment has been uploaded (0..1) while it is still sending; null when unknown. */
+        val uploadProgress: Float? = null,
     ) : TimelineEntry {
         /** Small grey centred line (joins, renames…) rather than a chat bubble. */
         val isStateLike get() = content is UiContent.Event

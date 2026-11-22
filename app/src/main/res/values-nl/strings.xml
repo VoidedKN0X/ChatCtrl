@@ -907,6 +907,29 @@
         <item quantity="other">%1$d bestanden verzenden?</item>
     </plurals>
     <string name="send_files_body">Elk bestand wordt als een apart bericht verzonden, in deze volgorde. Blijf in deze chat tot ze allemaal verzonden zijn.</string>
+    <string name="send_files_failed_item">%1$s: %2$s</string>
+    <plurals name="send_files_some_failed">
+        <item quantity="one">%1$d van %2$d bestanden is niet verzonden:</item>
+        <item quantity="other">%1$d van %2$d bestanden zijn niet verzonden:</item>
+    </plurals>
+    <string name="file_too_big_for_server">Dit bestand is groter dan je server toelaat (%1$s)</string>
+    <string name="uploading_percent">Bezig met uploaden, %1$d%%</string>
+    <string name="staging_remove">%1$s weghalen</string>
+    <string name="staging_too_big">Te groot</string>
+    <plurals name="staging_too_big_note">
+        <item quantity="one">%1$d bestand is groter dan je server toelaat (%2$s). Haal het weg om de rest te verzenden.</item>
+        <item quantity="other">%1$d bestanden zijn groter dan je server toelaat (%2$s). Haal ze weg om de rest te verzenden.</item>
+    </plurals>
+    <string name="staging_first_gets_caption">Het bijschrift gaat mee met het eerste bestand.</string>
+    <string name="staging_first_gets_caption_and_reply">Het bijschrift en het antwoord gaan mee met het eerste bestand; de andere volgen erna.</string>
+    <plurals name="staging_send_n">
+        <item quantity="one">%1$d verzenden</item>
+        <item quantity="other">%1$d verzenden</item>
+    </plurals>
+    <plurals name="staging_left_out">
+        <item quantity="one">%1$d bestand is weggelaten: maximaal %2$d tegelijk.</item>
+        <item quantity="other">%1$d bestanden zijn weggelaten: maximaal %2$d tegelijk.</item>
+    </plurals>
     <string name="verified_devices_only">Alleen geverifieerde apparaten</string>
     <string name="verified_devices_only_subtitle">Streng: je versleutelde berichten gaan alleen naar apparaten die hun eigenaar heeft geverifieerd, en berichten van niet-geverifieerde apparaten worden niet getoond.</string>
     <string name="verified_devices_only_on_title">Alleen geverifieerde apparaten aanzetten?</string>

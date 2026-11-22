@@ -905,6 +905,29 @@
         <item quantity="other">%1$d Dateien senden?</item>
     </plurals>
     <string name="send_files_body">Jede wird als eigene Nachricht gesendet, in dieser Reihenfolge. Bleib in diesem Chat, bis alle gesendet sind.</string>
+    <string name="send_files_failed_item">%1$s: %2$s</string>
+    <plurals name="send_files_some_failed">
+        <item quantity="one">%1$d von %2$d Dateien wurde nicht gesendet:</item>
+        <item quantity="other">%1$d von %2$d Dateien wurden nicht gesendet:</item>
+    </plurals>
+    <string name="file_too_big_for_server">Diese Datei ist größer, als dein Server erlaubt (%1$s)</string>
+    <string name="uploading_percent">Wird hochgeladen, %1$d %%</string>
+    <string name="staging_remove">%1$s entfernen</string>
+    <string name="staging_too_big">Zu groß</string>
+    <plurals name="staging_too_big_note">
+        <item quantity="one">%1$d Datei ist größer, als dein Server erlaubt (%2$s). Entferne sie, um den Rest zu senden.</item>
+        <item quantity="other">%1$d Dateien sind größer, als dein Server erlaubt (%2$s). Entferne sie, um den Rest zu senden.</item>
+    </plurals>
+    <string name="staging_first_gets_caption">Die Bildunterschrift gehört zur ersten Datei.</string>
+    <string name="staging_first_gets_caption_and_reply">Die Bildunterschrift und die Antwort gehören zur ersten Datei; die anderen folgen danach.</string>
+    <plurals name="staging_send_n">
+        <item quantity="one">%1$d senden</item>
+        <item quantity="other">%1$d senden</item>
+    </plurals>
+    <plurals name="staging_left_out">
+        <item quantity="one">%1$d Datei wurde weggelassen: höchstens %2$d auf einmal.</item>
+        <item quantity="other">%1$d Dateien wurden weggelassen: höchstens %2$d auf einmal.</item>
+    </plurals>
     <string name="verified_devices_only">Nur verifizierte Geräte</string>
     <string name="verified_devices_only_subtitle">Streng: Deine verschlüsselten Nachrichten gehen nur an Geräte, die ihr Besitzer verifiziert hat, und Nachrichten von nicht verifizierten Geräten werden nicht angezeigt.</string>
     <string name="verified_devices_only_on_title">„Nur verifizierte Geräte“ einschalten?</string>

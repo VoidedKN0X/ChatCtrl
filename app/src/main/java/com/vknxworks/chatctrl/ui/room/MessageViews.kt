@@ -46,6 +46,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -399,6 +401,14 @@ fun MessageRow(
                         },
                     )
                 }
+                }
+                if (item.status == SendStatus.SENDING) {
+                    item.uploadProgress?.let { p ->
+                        CtrlProgress(
+                            progress = { p },
+                            modifier = Modifier.width(160.dp).padding(4.dp).semantics { contentDescription = Strings.str(R.string.uploading_percent, (p * 100).toInt()) },
+                        )
+                    }
                 }
                 if (item.status == SendStatus.FAILED) {
                     Text(stringResource(R.string.not_sent_tap_to_retry_hold_for), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(4.dp))

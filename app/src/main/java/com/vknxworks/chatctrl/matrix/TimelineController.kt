@@ -304,12 +304,19 @@ class TimelineController(
         }
 
         var sendError: String? = null
+        var uploadProgress: Float? = null
         val sendState = e.localSendState
         // Only failed sends keep a handle; one that is sending again or was sent lets its native handle go.
         if (sendState !is EventSendState.SendingFailed) failedHandles.remove(key)
         val status = when (val s = sendState) {
             null, is EventSendState.Sent -> SendStatus.SENT
-            is EventSendState.NotSentYet -> SendStatus.SENDING
+            is EventSendState.NotSentYet -> {
+                // How much of a picture, video or file has been uploaded so far (null for text, or before it starts).
+                uploadProgress = s.progress?.progress?.let { p ->
+                    if (p.total > 0uL) (p.current.toDouble() / p.total.toDouble()).toFloat().coerceIn(0f, 1f) else null
+                }
+                SendStatus.SENDING
+            }
             is EventSendState.SendingFailed -> {
                 e.lazyProvider.getSendHandle()?.let { failedHandles[key] = it }
                 // The reason the SDK gives, shown under the message so a failed send can be explained.
@@ -349,6 +356,7 @@ class TimelineController(
             readBy = e.readReceipts.keys.filter { it != session.userId && it != e.sender },
             shield = shield,
             sendError = sendError,
+            uploadProgress = uploadProgress,
             receipts = e.readReceipts.entries
                 .filter { it.key != session.userId && it.key != e.sender }
                 .map { ReceiptUi(it.key, it.value.timestamp?.toLong()) }
@@ -602,23 +610,42 @@ class TimelineController(
         runCatching { timeline?.getEventTimelineItemByEventId(eventId)?.lazyProvider?.debugInfo()?.originalJson }.getOrNull()
     }
 
+    /** The largest file the server accepts, in bytes, or null when it isn't known. */
+    suspend fun maxUploadSize(): Long? = session.maxUploadSize()
+
     /** Copies a picked file into the cache and sends it as an image, video, audio clip or file. */
     fun sendAttachment(context: Context, uri: Uri, caption: String?, replyTo: String?) = launchAction { t ->
         sendOne(t, context, uri, caption, replyTo)
     }
 
     /**
-     * Sends several files as separate messages, one after the other in the order given, so they arrive in that
-     * order. A file that can't be read or sent doesn't stop the rest; the first error is shown afterwards.
+     * Sends several files as separate messages (Matrix has one event per file), one after the other in the order
+     * given. Each is copied, cleaned of photo location details and handed to the SDK's send queue before the next
+     * one starts, and the send queue uploads them in that same order, one at a time, so they arrive in order.
+     * [caption] and [replyTo] go on the first file only (see [AttachmentPlan]). A file that can't be read, is too
+     * big or can't be queued doesn't stop the rest; afterwards one message says which ones weren't sent and why.
+     * Files that fail later, while uploading, show under their own message with the reason and Retry as usual.
      */
-    fun sendAttachments(context: Context, uris: List<Uri>, replyTo: String?) = launchAction { t ->
-        var firstError: Throwable? = null
+    fun sendAttachments(context: Context, uris: List<Uri>, caption: String?, replyTo: String?) = launchAction { t ->
+        val failed = mutableListOf<String>()
         uris.forEachIndexed { i, uri ->
-            runCatching { sendOne(t, context, uri, null, if (i == 0) replyTo else null) }
-                .onFailure { if (firstError == null) firstError = it }
+            runCatching { sendOne(t, context, uri, AttachmentPlan.captionFor(i, caption), AttachmentPlan.replyFor(i, replyTo)) }
+                .onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    failed += Strings.str(R.string.send_files_failed_item, nameOf(context, uri), e.userMessage())
+                }
         }
-        firstError?.let { throw it }
+        if (failed.isNotEmpty()) {
+            // Set directly (not thrown): file names must not be mistaken for an error keyword or cut short.
+            _error.value = Strings.plural(R.plurals.send_files_some_failed, failed.size, failed.size, uris.size) + "\n" + failed.joinToString("\n")
+        }
     }
+
+    private fun nameOf(context: Context, uri: Uri): String = runCatching {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+    }.getOrNull()?.takeIf { it.isNotBlank() } ?: (uri.lastPathSegment ?: "?")
 
     private suspend fun sendOne(t: Timeline, context: Context, uri: Uri, caption: String?, replyTo: String?) {
         // Shared/picked files must come from another app, never from our own private storage.
@@ -633,11 +660,23 @@ class TimelineController(
         val safeName = name.substringAfterLast('/').replace(Regex("[^A-Za-z0-9._ -]"), "_").trim().takeIf { it.isNotEmpty() && it != "." && it != ".." } ?: "upload"
         val file = File(dir, "${System.currentTimeMillis()}_$safeName")
         if (!file.canonicalPath.startsWith(dir.canonicalPath + File.separator)) error(Strings.str(R.string.bad_file_name))
+        val max = session.maxUploadSize()
+        // Too big by the size the other app announces: refuse before copying anything.
+        val announced = runCatching {
+            resolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+                if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null
+            }
+        }.getOrNull()
+        if (AttachmentPlan.tooBig(announced, max)) error(Strings.str(R.string.file_too_big_for_server, AttachmentPlan.formatSize(max ?: 0L)))
         try {
             fun copyIn() {
                 resolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } } ?: error(Strings.str(R.string.couldn_t_read_the_file))
             }
             copyIn()
+            // Checked on the real copy too (a shared file's announced size can be missing or wrong).
+            if (AttachmentPlan.tooBig(file.length(), max)) {
+                error(Strings.str(R.string.file_too_big_for_server, AttachmentPlan.formatSize(max ?: 0L)))
+            }
             // A picture from "File" or shared by another app can still say where and when it was taken: strip
             // that first (JPEG, PNG, WebP). If the rewrite fails, the untouched original is copied again so the
             // send itself never breaks because of this.

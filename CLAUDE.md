@@ -23,6 +23,12 @@ What ChatCtrl stores itself (outside the Matrix SDK) and how:
 - Plain on purpose: `cache/media`, `cache/upload`, `cache/shared` (opened by viewers, players and other apps by path or FileProvider; purged after a day / an hour and on lock), `cache/osmdroid` (read by the map library), `notified`, `push_queue`, `push`, `unifiedpush` and `notify_links` prefs (read and written on the push and launch paths, which must not wait for or depend on a key) and plain settings.
 - There is no separate data key or sealed-file format in ChatCtrl (unlike RideCtrl): nothing it stores as its own plain files needed one.
 
+## Sending attachments
+
+- Every attach path (photo picker, GIF, File, share intents `SEND` and `SEND_MULTIPLE`, ClipData fallback) feeds one list into `AttachmentStagingDialog` (`ui/room/AttachmentStaging.kt`), at most `MAX_FILES_AT_ONCE` (20). The dialog only reads metadata (name, size, type, provider thumbnail); never read a file into memory there.
+- One file goes through `TimelineController.sendAttachment`, several through `sendAttachments`: sequentially in the order shown, each via `sendOne` (foreign-URI check, server size check before and after the copy, streaming copy to `cache/upload`, `ExifStrip`, delete the copy in `finally`). The SDK send queue uploads them in order. Keep it sequential so the timeline order matches.
+- Caption and reply go on the first file only (`matrix/AttachmentPlan`); a thread timeline puts every file in the thread by itself. Upload progress comes from `EventSendState.NotSentYet.progress`, switched on with `client.enableSendQueueUploadProgress(true)` in `MatrixSession`; the server limit is `MatrixSession.maxUploadSize()` (cached, null when unknown = don't block).
+
 ## Releasing
 
 - A release is published only when `versionName` in `app/build.gradle.kts` is bumped. Bump `versionCode` by 1 at the same time.

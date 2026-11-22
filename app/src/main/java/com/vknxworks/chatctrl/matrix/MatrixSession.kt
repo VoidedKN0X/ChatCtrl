@@ -57,6 +57,25 @@ class MatrixSession(
 
     private val handles = mutableListOf<TaskHandle>()
 
+    init {
+        // Lets a picture, video or file that's still uploading show how far along it is in the chat.
+        runCatching { client.enableSendQueueUploadProgress(true) }
+    }
+
+    /** The server's largest allowed upload in bytes, once known (asked once per session). */
+    @Volatile private var maxUpload: Long? = null
+
+    /**
+     * The largest file the server accepts (its `m.upload.size`), or null when the server doesn't say or can't
+     * be asked right now: then nothing is blocked up front and the server's own answer decides.
+     */
+    suspend fun maxUploadSize(): Long? {
+        maxUpload?.let { return it }
+        val v = runCatching { client.getMaxMediaUploadSize().toLong() }.getOrNull()?.takeIf { it > 0 }
+        if (v != null) maxUpload = v
+        return v
+    }
+
     private val _syncState = MutableStateFlow(SyncServiceState.IDLE)
     val syncState: StateFlow<SyncServiceState> = _syncState.asStateFlow()
 

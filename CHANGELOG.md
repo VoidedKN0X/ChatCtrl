@@ -2,6 +2,23 @@
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Built and checked by CI only: nothing in this version had been run on a phone when it was written.
+
+### New
+
+- **Send several photos, videos and files at once, with a preview first.** **+ › Photo or video** (the photo picker), **+ › GIF** and **+ › File** let you select up to 20 items in one go, and sharing several items to ChatCtrl from a gallery or file manager works the same way, also when pictures, videos and other files are mixed. Before anything is sent, a window shows them in a strip: pictures as thumbnails, videos with a still and a play mark, other files with an icon, each with its name and size and an **×** to take it out. The title says how many there are and the button says **Send 5** (for example). One file still opens the familiar single preview, now with its name and size. Pick more than 20 and the rest are left out, with a short message saying how many.
+- **One caption for a batch.** Matrix sends every file as its own message, so a caption can only go on one of them: it goes on the **first** one (as Telegram does with albums; Element X only offers captions for a single file). The window says so under the caption field.
+- **Upload progress in the chat.** A picture, video or file that is still uploading now shows a thin progress bar under its message, filling up as it goes. Each file of a batch has its own.
+- **Too big for your server? You see it before sending.** ChatCtrl asks your server for its largest allowed upload. Files over that limit get a red border and "Too big" in the strip, a line says how many and what the limit is, and **Send** stays off until you take them out. A file that turns out too big when it's copied (because the other app didn't give its size) is refused with the same message instead of failing halfway through the upload.
+
+### Changed
+
+- **Sending several files keeps going when one fails.** Files are sent one after the other in the order shown, each through the same path as a single file: photo location details removed as in 2.4.2, size check, upload progress, and a failed upload shows its reason under its own message with **Retry**. If a file can't even be read or queued (it was deleted, or it's too big), the others are still sent and one message afterwards lists which ones weren't sent and why. Stay in the chat until they have all appeared in it.
+- **Replying with several files:** the first file is sent as the reply (it quotes the message you replied to) and the others follow it without repeating the quote; the window says so. In a thread, every file goes into the thread.
+- **Files are never loaded into memory to show or check them.** The preview only asks the other app for the name, size and a thumbnail; each file is copied to ChatCtrl's private upload folder only when it's its turn to be sent, and that copy is deleted as soon as the Matrix library has taken it over. Cancelling the window leaves nothing behind.
+
 ## v2.4.2 (2026-11-22)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

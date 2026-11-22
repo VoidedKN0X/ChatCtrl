@@ -7,7 +7,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Content another app shared into ChatCtrl, waiting for the user to pick a room. */
-data class SharedContent(val text: String?, val uri: Uri?, val more: List<Uri> = emptyList()) {
+data class SharedContent(
+    val text: String?,
+    val uri: Uri?,
+    val more: List<Uri> = emptyList(),
+    /** Files left out because more than [MAX_FILES_AT_ONCE] were shared at once. */
+    val leftOut: Int = 0,
+) {
     /** Every shared file: [uri] first, then the rest when several were shared at once. */
     val uris: List<Uri> get() = listOfNotNull(uri) + more
 }
@@ -46,4 +52,23 @@ fun isForeignContentUri(context: Context, uri: Uri): Boolean {
     val privateDirs = listOfNotNull(context.dataDir?.absolutePath, context.filesDir?.parentFile?.absolutePath, "/data/data/$own", "/data/user/0/$own")
     if (privateDirs.any { it.isNotBlank() && path.contains(it) }) return false
     return true
+}
+
+/**
+ * The files another app shared, in the order it gave them: the EXTRA_STREAM extra (one for SEND, a list for
+ * SEND_MULTIPLE) and, when that is missing, the intent's ClipData (some apps only fill that in). Pictures, videos
+ * and other files can be mixed. Only [isForeignContentUri] files are kept, each once, at most [MAX_FILES_AT_ONCE];
+ * the second value is how many were left out over that limit.
+ */
+fun sharedStreams(context: Context, intent: android.content.Intent): Pair<List<Uri>, Int> {
+    val fromExtra: List<Uri> = if (intent.action == android.content.Intent.ACTION_SEND_MULTIPLE) {
+        androidx.core.content.IntentCompat.getParcelableArrayListExtra(intent, android.content.Intent.EXTRA_STREAM, Uri::class.java).orEmpty().filterNotNull()
+    } else {
+        listOfNotNull(androidx.core.content.IntentCompat.getParcelableExtra(intent, android.content.Intent.EXTRA_STREAM, Uri::class.java))
+    }
+    val all = fromExtra.ifEmpty {
+        val clip = intent.clipData
+        if (clip == null) emptyList() else (0 until clip.itemCount).mapNotNull { clip.getItemAt(it)?.uri }
+    }
+    return com.vknxworks.chatctrl.matrix.AttachmentPlan.take(all.filter { isForeignContentUri(context, it) }, MAX_FILES_AT_ONCE)
 }
